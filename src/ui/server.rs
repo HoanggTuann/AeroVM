@@ -5,6 +5,8 @@ use std::sync::Arc;
 use tiny_http::{Header, Response, Server};
 
 const INDEX_HTML: &str = include_str!("assets/index.html");
+const STYLE_CSS: &str = include_str!("assets/style.css");
+const APP_JS: &str = include_str!("assets/app.js");
 
 #[derive(Deserialize)]
 struct CreateVmRequest {
@@ -84,6 +86,22 @@ where
         if method == "GET" && (url == "/" || url == "/index.html") {
             let resp = Response::from_string(INDEX_HTML).with_header(
                 Header::from_bytes(&b"Content-Type"[..], &b"text/html; charset=utf-8"[..]).unwrap(),
+            );
+            let _ = request.respond(resp);
+            continue;
+        }
+
+        if method == "GET" && url == "/style.css" {
+            let resp = Response::from_string(STYLE_CSS).with_header(
+                Header::from_bytes(&b"Content-Type"[..], &b"text/css; charset=utf-8"[..]).unwrap(),
+            );
+            let _ = request.respond(resp);
+            continue;
+        }
+
+        if method == "GET" && url == "/app.js" {
+            let resp = Response::from_string(APP_JS).with_header(
+                Header::from_bytes(&b"Content-Type"[..], &b"application/javascript; charset=utf-8"[..]).unwrap(),
             );
             let _ = request.respond(resp);
             continue;
@@ -336,6 +354,14 @@ where
                 Err(e) => serde_json::json!({ "ok": false, "error": e }).to_string(),
             };
             let resp = Response::from_string(json).with_header(
+                Header::from_bytes(&b"Content-Type"[..], &b"application/json"[..]).unwrap(),
+            );
+            let _ = request.respond(resp);
+            continue;
+        }
+
+        if method == "POST" && url == "/api/app/ping" {
+            let resp = Response::from_string("{\"ok\":true}").with_header(
                 Header::from_bytes(&b"Content-Type"[..], &b"application/json"[..]).unwrap(),
             );
             let _ = request.respond(resp);

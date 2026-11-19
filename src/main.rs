@@ -14,7 +14,7 @@ use std::sync::Arc;
 #[cfg(windows)]
 use std::os::windows::process::CommandExt;
 
-fn open_browser_window(url: &str) {
+fn open_browser_window(url: &str, aerovm_dir: &Path) {
     let local_app_data = std::env::var("LOCALAPPDATA").unwrap_or_default();
     let edge_local = format!("{}\\Microsoft\\Edge\\Application\\msedge.exe", local_app_data);
     let chrome_local = format!("{}\\Google\\Chrome\\Application\\chrome.exe", local_app_data);
@@ -29,21 +29,25 @@ fn open_browser_window(url: &str) {
         "C:\\Program Files\\BraveSoftware\\Brave-Browser\\Application\\brave.exe",
     ];
 
+    let profile_dir = aerovm_dir.join("app_profile");
+    let _ = std::fs::create_dir_all(&profile_dir);
+    let profile_arg = format!("--user-data-dir={}", profile_dir.to_string_lossy());
+
     for path in &candidates {
         if !path.is_empty() && Path::new(path).exists() {
             let mut cmd = Command::new(path);
             cmd.arg(format!("--app={}", url))
-               .arg("--window-size=1240,840");
+               .arg(&profile_arg)
+               .arg("--window-size=1260,860")
+               .arg("--no-first-run")
+               .arg("--no-default-browser-check")
+               .arg("--disable-extensions")
+               .arg("--disable-features=Translate,OptimizationHints,MediaRouter");
 
             #[cfg(windows)]
             cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
 
-            if let Ok(mut child) = cmd.spawn() {
-                // Khi người dùng tắt cửa sổ ứng dụng, tự động kết thúc tiến trình chạy ngầm
-                std::thread::spawn(move || {
-                    let _ = child.wait();
-                    std::process::exit(0);
-                });
+            if cmd.spawn().is_ok() {
                 return;
             }
         }
@@ -78,11 +82,9 @@ fn resolve_aerovm_dir() -> PathBuf {
     // 2. Kiểm tra cạnh file thực thi (nếu chạy trong thư mục cài đặt riêng C:\Users\...\AeroVM)
     if let Ok(exe_path) = std::env::current_exe() {
         if let Some(exe_dir) = exe_path.parent() {
-            // Trường hợp 1: exe nằm trong thư mục gốc cài đặt
             if exe_dir.join("qemu").exists() || exe_dir.join("vms").exists() {
                 return exe_dir.to_path_buf();
             }
-            // Trường hợp 2: exe nằm trong thư mục bin/ (vd: AeroVM/bin/aerovm.exe)
             if let Some(parent) = exe_dir.parent() {
                 if parent.join("qemu").exists() || parent.join("vms").exists() {
                     return parent.to_path_buf();
@@ -126,9 +128,10 @@ fn main() {
     }
 
     let default_port = 45678;
+    let base_dir = aerovm_dir.clone();
 
-    ui::run_server(manager, default_port, |port| {
+    ui::run_server(manager, default_port, move |port| {
         let url = format!("http://127.0.0.1:{}", port);
-        open_browser_window(&url);
+        open_browser_window(&url, &base_dir);
     });
 }
