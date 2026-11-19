@@ -131,6 +131,7 @@ impl VmManager {
         Ok(cfg)
     }
 
+    #[allow(dead_code)]
     pub fn is_running(&self, id: &str) -> bool {
         self.cleanup_dead_processes();
         let running_map = self.running.lock().unwrap();

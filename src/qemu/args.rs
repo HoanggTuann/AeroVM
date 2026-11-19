@@ -14,9 +14,10 @@ impl QemuArgs {
         // Máy ảo Q35 & Tăng tốc phần cứng WHPX
         args.push("-machine".to_string());
         if cfg.accel == "whpx" {
-            args.push("q35,accel=whpx:tcg".to_string());
+            // Trên Windows QEMU: WHPX hoạt động tối ưu nhất khi có kernel-irqchip=off
+            args.push("q35,accel=whpx:tcg,kernel-irqchip=off".to_string());
             args.push("-cpu".to_string());
-            args.push("host".to_string());
+            args.push("max".to_string());
         } else {
             args.push("q35,accel=tcg".to_string());
             args.push("-cpu".to_string());

@@ -24,17 +24,32 @@ fn default_cores() -> u32 { 2 }
 fn default_ram() -> u32 { 4096 }
 fn default_disk() -> u32 { 32 }
 
-pub fn run_server(manager: Arc<VmManager>, port: u16) {
-    let addr = format!("127.0.0.1:{}", port);
-    let server = match Server::http(&addr) {
-        Ok(s) => s,
-        Err(e) => {
-            eprintln!("[!] Không thể lắng nghe trên {}: {}", addr, e);
+pub fn run_server<F>(manager: Arc<VmManager>, base_port: u16, on_ready: F)
+where
+    F: FnOnce(u16) + Send + 'static,
+{
+    let mut server = None;
+    let mut active_port = base_port;
+
+    for p in base_port..(base_port + 10) {
+        let addr = format!("127.0.0.1:{}", p);
+        if let Ok(s) = Server::http(&addr) {
+            server = Some(s);
+            active_port = p;
+            break;
+        }
+    }
+
+    let server = match server {
+        Some(s) => s,
+        None => {
+            eprintln!("[!] Không thể lắng nghe trên các cổng từ {} đến {}", base_port, base_port + 10);
             return;
         }
     };
 
-    println!("[*] AeroVM Dashboard đang chạy tại: http://{}", addr);
+    println!("[*] AeroVM Dashboard đang chạy tại: http://127.0.0.1:{}", active_port);
+    on_ready(active_port);
 
     for mut request in server.incoming_requests() {
         let url = request.url().to_string();
@@ -89,7 +104,7 @@ pub fn run_server(manager: Arc<VmManager>, port: u16) {
                     }
                 }
                 Err(err) => {
-                    let json = serde_json::json!({ "ok": false, "error": format!("Lỗi dữ liệu: {} (body: {})", err, body) }).to_string();
+                    let json = serde_json::json!({ "ok": false, "error": format!("Lỗi dữ liệu: {}", err) }).to_string();
                     let resp = Response::from_string(json);
                     let _ = request.respond(resp);
                     continue;
@@ -142,4 +157,6 @@ pub fn run_server(manager: Arc<VmManager>, port: u16) {
         let resp = Response::from_string("Not Found").with_status_code(404);
         let _ = request.respond(resp);
     }
+
+
 }

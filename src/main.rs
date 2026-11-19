@@ -5,9 +5,51 @@ mod ui;
 
 use config::VmConfig;
 use manager::VmManager;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::Arc;
+
+fn open_browser_window(url: &str) {
+    let local_app_data = std::env::var("LOCALAPPDATA").unwrap_or_default();
+    let edge_local = format!("{}\\Microsoft\\Edge\\Application\\msedge.exe", local_app_data);
+    let chrome_local = format!("{}\\Google\\Chrome\\Application\\chrome.exe", local_app_data);
+
+    let candidates = [
+        "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+        "C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe",
+        edge_local.as_str(),
+        "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+        "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
+        chrome_local.as_str(),
+        "C:\\Program Files\\BraveSoftware\\Brave-Browser\\Application\\brave.exe",
+    ];
+
+    for path in &candidates {
+        if !path.is_empty() && Path::new(path).exists() {
+            let res = Command::new(path)
+                .arg(format!("--app={}", url))
+                .arg("--window-size=1200,800")
+                .spawn();
+            if res.is_ok() {
+                return;
+            }
+        }
+    }
+
+    // Fallback 1: rundll32
+    if Command::new("rundll32.exe")
+        .args(["url.dll,FileProtocolHandler", url])
+        .spawn()
+        .is_ok()
+    {
+        return;
+    }
+
+    // Fallback 2: cmd start
+    let _ = Command::new("cmd.exe")
+        .args(["/c", "start", "", url])
+        .spawn();
+}
 
 fn main() {
     println!("============================================================");
@@ -23,43 +65,25 @@ fn main() {
     let vms_dir = aerovm_dir.join("vms");
     let qemu_dir = aerovm_dir.join("qemu");
 
-    println!("[*] Thư mục máy ảo: {:?}", vms_dir);
+    println!("[*] Thư mục lưu máy ảo: {:?}", vms_dir);
     println!("[*] Thư mục QEMU: {:?}", qemu_dir);
 
     let manager = Arc::new(VmManager::new(vms_dir.clone(), qemu_dir.clone()));
 
-    // Nếu chưa có máy ảo nào, tự động tạo sẵn một máy ảo mẫu Ubuntu
+    // Nếu chưa có máy ảo nào, tự động tạo sẵn máy ảo mẫu Ubuntu
     if manager.list_vms().is_empty() {
-        println!("[*] Khởi tạo máy ảo mẫu Ubuntu 24.04...");
+        println!("[*] Đang khởi tạo máy ảo mẫu Ubuntu 24.04 LTS...");
         let template = VmConfig::new_template("Ubuntu 24.04 LTS", "linux", None);
         let _ = manager.create_vm(template);
     }
 
-    let port = 45678;
-    let url = format!("http://127.0.0.1:{}", port);
+    let default_port = 45678;
 
-    // Mở giao diện UTM dạng App Window bằng Edge / Chrome
-    let url_clone = url.clone();
-    std::thread::spawn(move || {
-        std::thread::sleep(std::time::Duration::from_millis(600));
-        println!("[*] Đang mở giao diện AeroVM UTM Window...");
-        
-        let launched = Command::new("msedge.exe")
-            .arg(format!("--app={}", url_clone))
-            .arg("--window-size=1200,780")
-            .spawn()
-            .is_ok();
-
-        if !launched {
-            // Fallback mở trình duyệt mặc định
-            let _ = Command::new("cmd.exe")
-                .arg("/c")
-                .arg("start")
-                .arg(&url_clone)
-                .spawn();
-        }
+    ui::run_server(manager, default_port, |port| {
+        let url = format!("http://127.0.0.1:{}", port);
+        println!("[*] Đang mở giao diện AeroVM UTM Window: {}", url);
+        open_browser_window(&url);
+        println!("[*] Giao diện đã sẵn sàng! Bạn có thể sử dụng AeroVM trên cửa sổ vừa mở.");
+        println!("[*] (Hãy giữ cửa sổ console này chạy để duy trì dịch vụ máy ảo)");
     });
-
-    // Chạy máy chủ giao diện
-    ui::run_server(manager, port);
 }
