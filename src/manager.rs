@@ -185,6 +185,16 @@ impl VmManager {
         Ok(())
     }
 
+    pub fn set_vm_iso(&self, id: &str, iso: Option<String>) -> Result<(), String> {
+        let mut cfg = self.get_vm(id).ok_or_else(|| "Không tìm thấy VM".to_string())?;
+        cfg.iso_path = iso;
+        let vm_dir = self.base_dir.join(id);
+        let config_json = serde_json::to_string_pretty(&cfg).map_err(|e| e.to_string())?;
+        fs::write(vm_dir.join("config.json"), config_json)
+            .map_err(|e| format!("Không thể cập nhật config.json: {}", e))?;
+        Ok(())
+    }
+
     fn cleanup_dead_processes(&self) {
         let mut running_map = self.running.lock().unwrap();
         running_map.retain(|_, child| match child.try_wait() {

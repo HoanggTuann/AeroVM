@@ -56,6 +56,7 @@ impl VmConfig {
         let (os_variant, cpu_cores, memory_mb, disk_size_gb) = match os_type {
             "windows" => ("win11", 4, 8192, 64),
             "android" => ("android-x86", 2, 4096, 16),
+            "slitaz" => ("slitaz", 1, 1024, 4),
             "linux" | _ => ("ubuntu", 2, 4096, 32),
         };
 

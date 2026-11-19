@@ -14,14 +14,14 @@ impl QemuArgs {
         // Máy ảo Q35 & Tăng tốc phần cứng WHPX
         args.push("-machine".to_string());
         if cfg.accel == "whpx" {
-            // Trên Windows QEMU: WHPX hoạt động tối ưu nhất khi có kernel-irqchip=off
+            // WHPX trên Windows ổn định nhất với -cpu qemu64 và kernel-irqchip=off
             args.push("q35,accel=whpx:tcg,kernel-irqchip=off".to_string());
             args.push("-cpu".to_string());
-            args.push("max".to_string());
+            args.push("qemu64".to_string());
         } else {
             args.push("q35,accel=tcg".to_string());
             args.push("-cpu".to_string());
-            args.push("max".to_string());
+            args.push("qemu64".to_string());
         }
 
         // CPU Cores & RAM
@@ -43,17 +43,9 @@ impl QemuArgs {
         args.push("-device".to_string());
         args.push("hda-duplex".to_string());
 
-        // Card đồ họa tối ưu theo hệ điều hành
-        match cfg.os_type.as_str() {
-            "windows" => {
-                args.push("-vga".to_string());
-                args.push("qxl".to_string());
-            }
-            "android" | "linux" | _ => {
-                args.push("-device".to_string());
-                args.push("virtio-vga".to_string());
-            }
-        }
+        // Card đồ họa chuẩn VGA (tương thích 100% mọi OS, không bị lỗi 'Display output is not active')
+        args.push("-vga".to_string());
+        args.push("std".to_string());
 
         // Mạng VirtIO NAT
         args.push("-netdev".to_string());
@@ -73,14 +65,14 @@ impl QemuArgs {
         // Ổ đĩa CD-ROM cài đặt (ISO)
         if let Some(ref iso) = cfg.iso_path {
             if !iso.trim().is_empty() && std::path::Path::new(iso).exists() {
-                args.push("-drive".to_string());
-                args.push(format!("file={},media=cdrom,readonly=on", iso));
+                args.push("-cdrom".to_string());
+                args.push(iso.clone());
             }
         }
 
-        // Menu Boot
+        // Menu Boot & Thứ tự Boot (ưu tiên CD-ROM trước)
         args.push("-boot".to_string());
-        args.push("menu=on".to_string());
+        args.push("order=dcn,menu=on".to_string());
 
         // Hiển thị giao diện cửa sổ khách
         match cfg.display_type.as_str() {

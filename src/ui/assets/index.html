@@ -181,6 +181,9 @@
             <div class="card-title">Ổ đĩa cài đặt (ISO)</div>
             <div class="card-val" id="specIso" style="font-size: 14px; word-break: break-all;">Chưa gắn ISO</div>
             <div class="card-desc">Tệp ảnh ISO nạp lúc khởi động máy ảo.</div>
+            <div style="margin-top: 10px;">
+              <button class="btn-action" style="height: 30px; font-size: 12px; padding: 0 12px; border-radius: 6px;" onclick="promptSetIso()">✏️ Đổi / Gắn file ISO</button>
+            </div>
           </div>
 
           <div class="card">
@@ -230,6 +233,10 @@
             <div class="os-card" data-os="android" onclick="selectOs(this, 'android')">
               <div class="os-card-icon">🤖</div>
               <div class="os-card-name">Android</div>
+            </div>
+            <div class="os-card" data-os="slitaz" onclick="selectOs(this, 'slitaz')">
+              <div class="os-card-icon">⚡</div>
+              <div class="os-card-name">SliTaz (Live)</div>
             </div>
           </div>
         </div>
@@ -311,6 +318,7 @@
         let icon = '🐧';
         if (vm.os_type === 'windows') icon = '🪟';
         if (vm.os_type === 'android') icon = '🤖';
+        if (vm.os_type === 'slitaz' || (vm.name && vm.name.toLowerCase().includes('slitaz'))) icon = '⚡';
 
         item.innerHTML = `
           <div class="vm-os-icon">${icon}</div>
@@ -355,7 +363,12 @@
 
       document.getElementById('specCpuRam').textContent = `${vm.cpu_cores} Nhân · ${vm.memory_mb} MB RAM`;
       document.getElementById('specDisk').textContent = `${vm.disk_size_gb} GB QCOW2`;
-      document.getElementById('specIso').textContent = vm.iso_path ? vm.iso_path : 'Chưa gắn tệp ISO';
+      const specIso = document.getElementById('specIso');
+      if (vm.iso_path) {
+        specIso.innerHTML = `<span style="color:#58a6ff;">${esc(vm.iso_path)}</span>`;
+      } else {
+        specIso.innerHTML = `<span style="color:#d29922;">⚠️ Chưa gắn ISO</span> <span style="font-size:12px;color:var(--text-sub);">(Cần ISO để khởi động)</span>`;
+      }
     }
 
     function resetView() {
@@ -386,12 +399,44 @@
         nameInput.value = 'Android-x86';
         ramSlider.value = 4096;
         diskSlider.value = 16;
+      } else if (type === 'slitaz') {
+        nameInput.value = 'SliTaz GNU/Linux (Live)';
+        ramSlider.value = 1024;
+        diskSlider.value = 4;
+        const isoInput = document.getElementById('inputVmIso');
+        if (!isoInput.value) {
+          isoInput.value = 'C:\\Users\\th100\\.aerovm\\isos\\slitaz-core64.iso';
+        }
       } else {
         nameInput.value = 'Ubuntu 24.04';
         ramSlider.value = 4096;
         diskSlider.value = 32;
       }
       updateSliders();
+    }
+
+    async function promptSetIso() {
+      if (!selectedVmId) return;
+      const vm = vms.find(v => v.id === selectedVmId);
+      const current = (vm && vm.iso_path) ? vm.iso_path : '';
+      const newIso = prompt('Nhập đường dẫn đầy đủ đến tệp .ISO:\n(Ví dụ: C:\\Users\\th100\\.aerovm\\isos\\slitaz-core64.iso hoặc để trống để gỡ ISO)', current);
+      if (newIso === null) return;
+      try {
+        const res = await fetch('/api/vms/set_iso', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: selectedVmId, iso: newIso.trim() ? newIso.trim() : null })
+        });
+        const data = await res.json();
+        if (data.ok) {
+          await loadVms();
+          selectVm(selectedVmId);
+        } else {
+          alert('Lỗi: ' + (data.error || 'Không thể cập nhật ISO'));
+        }
+      } catch (e) {
+        alert('Lỗi kết nối: ' + e);
+      }
     }
 
     function updateSliders() {

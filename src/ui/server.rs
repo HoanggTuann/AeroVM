@@ -24,6 +24,12 @@ fn default_cores() -> u32 { 2 }
 fn default_ram() -> u32 { 4096 }
 fn default_disk() -> u32 { 32 }
 
+#[derive(Deserialize)]
+struct SetIsoRequest {
+    id: String,
+    iso: Option<String>,
+}
+
 pub fn run_server<F>(manager: Arc<VmManager>, base_port: u16, on_ready: F)
 where
     F: FnOnce(u16) + Send + 'static,
@@ -105,6 +111,31 @@ where
                 }
                 Err(err) => {
                     let json = serde_json::json!({ "ok": false, "error": format!("Lỗi dữ liệu: {}", err) }).to_string();
+                    let resp = Response::from_string(json);
+                    let _ = request.respond(resp);
+                    continue;
+                }
+            }
+        }
+
+        if method == "POST" && url == "/api/vms/set_iso" {
+            let mut body = String::new();
+            let _ = request.as_reader().read_to_string(&mut body);
+            match serde_json::from_str::<SetIsoRequest>(&body) {
+                Ok(req) => {
+                    let res = manager.set_vm_iso(&req.id, req.iso);
+                    let json = match res {
+                        Ok(_) => serde_json::json!({ "ok": true }).to_string(),
+                        Err(e) => serde_json::json!({ "ok": false, "error": e }).to_string(),
+                    };
+                    let resp = Response::from_string(json).with_header(
+                        Header::from_bytes(&b"Content-Type"[..], &b"application/json"[..]).unwrap(),
+                    );
+                    let _ = request.respond(resp);
+                    continue;
+                }
+                Err(e) => {
+                    let json = serde_json::json!({ "ok": false, "error": format!("JSON error: {}", e) }).to_string();
                     let resp = Response::from_string(json);
                     let _ = request.respond(resp);
                     continue;

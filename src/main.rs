@@ -70,8 +70,18 @@ fn main() {
 
     let manager = Arc::new(VmManager::new(vms_dir.clone(), qemu_dir.clone()));
 
-    // Nếu chưa có máy ảo nào, tự động tạo sẵn máy ảo mẫu Ubuntu
-    if manager.list_vms().is_empty() {
+    // Tự động kiểm tra và khởi tạo máy ảo SliTaz GNU/Linux Live nếu có ISO
+    let slitaz_iso = aerovm_dir.join("isos").join("slitaz-core64.iso");
+    let has_slitaz = manager.list_vms().iter().any(|v| v.name.to_lowercase().contains("slitaz"));
+    if !has_slitaz && slitaz_iso.exists() {
+        println!("[*] Phát hiện SliTaz Live ISO! Đang khởi tạo máy ảo SliTaz GNU/Linux...");
+        let template = VmConfig::new_template(
+            "SliTaz GNU/Linux (Live)",
+            "slitaz",
+            Some(slitaz_iso.to_string_lossy().to_string()),
+        );
+        let _ = manager.create_vm(template);
+    } else if manager.list_vms().is_empty() {
         println!("[*] Đang khởi tạo máy ảo mẫu Ubuntu 24.04 LTS...");
         let template = VmConfig::new_template("Ubuntu 24.04 LTS", "linux", None);
         let _ = manager.create_vm(template);
