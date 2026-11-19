@@ -1,60 +1,50 @@
 @echo off
+setlocal EnableDelayedExpansion
 title AeroVM Setup - Trinh cai dat AeroVM
-chcp 65001 >nul
 cd /d "%~dp0"
 
 echo ======================================================================
-echo          🚀 AeroVM Setup - Trình Cài Đặt Ứng Dụng Máy Ảo UTM
+echo              AeroVM Setup - Trinh Cai Dat Ung Dung May Ao UTM
 echo ======================================================================
 echo.
 
-set "INSTALL_DIR=%LOCALAPPDATA%\Programs\AeroVM"
+set "TARGET_DIR=%LOCALAPPDATA%\Programs\AeroVM"
 set "DESKTOP_DIR=%USERPROFILE%\Desktop"
 set "START_MENU=%APPDATA%\Microsoft\Windows\Start Menu\Programs"
 
-echo [*] Thu muc cai dat: "%INSTALL_DIR%"
-echo [*] Dang tao thu muc cai dat rieng...
-if not exist "%INSTALL_DIR%" mkdir "%INSTALL_DIR%"
+echo [*] Thu muc cai dat rieng: "!TARGET_DIR!"
+if not exist "!TARGET_DIR!" mkdir "!TARGET_DIR!"
 
-echo [*] Dang sao chep tap tin chuong trinh...
+echo [*] Dang sao chep tap tin chuong trinh vao thu muc rieng...
 if exist "aerovm.exe" (
-    copy /y "aerovm.exe" "%INSTALL_DIR%\" >nul
+    copy /y "aerovm.exe" "!TARGET_DIR!\aerovm.exe" >nul
 ) else if exist "target\release\aerovm.exe" (
-    copy /y "target\release\aerovm.exe" "%INSTALL_DIR%\" >nul
+    copy /y "target\release\aerovm.exe" "!TARGET_DIR!\aerovm.exe" >nul
 ) else (
     echo [!] Khong tim thay tap tin aerovm.exe!
     pause
     exit /b 1
 )
 
-copy /y "README.md" "%INSTALL_DIR%\" >nul 2>&1
-copy /y "uninstall.bat" "%INSTALL_DIR%\" >nul 2>&1
+if exist "README.md" copy /y "README.md" "!TARGET_DIR!\README.md" >nul
+if exist "uninstall.bat" copy /y "uninstall.bat" "!TARGET_DIR!\uninstall.bat" >nul
+if exist "run.bat" copy /y "run.bat" "!TARGET_DIR!\run.bat" >nul
 
-echo [*] Dang tao loi tat (Shortcut) tren Desktop va Start Menu...
-powershell -NoProfile -ExecutionPolicy Bypass -Command ^
-    "$WshShell = New-Object -ComObject WScript.Shell; ^
-    $Shortcut = $WshShell.CreateShortcut('%DESKTOP_DIR%\AeroVM.lnk'); ^
-    $Shortcut.TargetPath = '%INSTALL_DIR%\aerovm.exe'; ^
-    $Shortcut.WorkingDirectory = '%INSTALL_DIR%'; ^
-    $Shortcut.Description = 'AeroVM - Trình Quản Lý Máy Ảo Phong Cách UTM'; ^
-    $Shortcut.Save(); ^
-    $StartShortcut = $WshShell.CreateShortcut('%START_MENU%\AeroVM.lnk'); ^
-    $StartShortcut.TargetPath = '%INSTALL_DIR%\aerovm.exe'; ^
-    $StartShortcut.WorkingDirectory = '%INSTALL_DIR%'; ^
-    $StartShortcut.Save();"
+echo [*] Dang tao Shortcut tren Desktop va Start Menu...
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$ws = New-Object -ComObject WScript.Shell; $s1 = $ws.CreateShortcut(\"$env:USERPROFILE\Desktop\AeroVM.lnk\"); $s1.TargetPath = \"$env:LOCALAPPDATA\Programs\AeroVM\aerovm.exe\"; $s1.WorkingDirectory = \"$env:LOCALAPPDATA\Programs\AeroVM\"; $s1.Description = \"AeroVM - UTM Style Virtual Machines\"; $s1.Save(); $sm = \"$env:APPDATA\Microsoft\Windows\Start Menu\Programs\"; if (Test-Path $sm) { $s2 = $ws.CreateShortcut(\"$sm\AeroVM.lnk\"); $s2.TargetPath = \"$env:LOCALAPPDATA\Programs\AeroVM\aerovm.exe\"; $s2.WorkingDirectory = \"$env:LOCALAPPDATA\Programs\AeroVM\"; $s2.Save() }"
 
 echo.
 echo ======================================================================
-echo   🎉 CÀI ĐẶT THÀNH CÔNG!
-echo   - Ứng dụng đã được cài đặt vào thư mục riêng biệt:
-echo     "%INSTALL_DIR%"
-echo   - Đã tạo biểu tượng AeroVM trên Desktop (Màn hình chính).
-echo   - Từ nay bạn chỉ cần nhấp đúp vào icon "AeroVM" trên Desktop!
-echo     (Chạy ngầm hoàn toàn, 0 cửa sổ console đen, giao diện UTM mượt mà)
+echo   CAI DAT THANH CONG!
+echo   - Thu muc ung dung: "!TARGET_DIR!"
+echo   - Da tao bieu tuong AeroVM tren Desktop va Start Menu.
+echo   - Ban co the nhap dup vao Shortcut AeroVM tren Desktop de su dung.
+echo     (Chay ngam hoan toan 100%%, 0 cua so console den)
 echo ======================================================================
 echo.
 
-set /p START_NOW="Bạn có muốn khởi động AeroVM ngay bây giờ không? (Y/N): "
-if /i "%START_NOW%"=="Y" (
-    start "" "%INSTALL_DIR%\aerovm.exe"
+set "START_NOW=Y"
+set /p START_NOW="Ban co muon khoi dong AeroVM ngay bay gio khong? (Y/N): "
+if /i "!START_NOW!"=="Y" (
+    start "" "!TARGET_DIR!\aerovm.exe"
 )
