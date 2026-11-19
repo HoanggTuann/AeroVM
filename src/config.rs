@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 fn generate_id(prefix: &str) -> String {
@@ -15,8 +15,23 @@ fn current_timestamp_str() -> String {
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()
         .as_secs();
-    // Đơn giản hóa timestamp dạng epoch giây
     format!("{}", secs)
+}
+
+fn default_machine() -> String {
+    "pc".to_string()
+}
+
+fn default_vga() -> String {
+    "std".to_string()
+}
+
+fn default_true() -> bool {
+    true
+}
+
+fn default_display() -> String {
+    "sdl".to_string()
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -33,16 +48,32 @@ pub struct VmDrive {
 pub struct VmConfig {
     pub id: String,
     pub name: String,
-    pub os_type: String, // "linux", "windows", "android", "custom"
-    pub os_variant: String, // e.g. "ubuntu", "win11", "android-x86"
+    pub os_type: String, // "linux", "windows", "android", "slitaz", "custom"
+    pub os_variant: String, // e.g. "ubuntu", "win11", "android-x86", "slitaz"
     pub arch: String, // "x86_64", "aarch64"
     pub cpu_cores: u32,
     pub memory_mb: u32,
     pub accel: String, // "whpx", "tcg"
+    
+    #[serde(default = "default_machine")]
+    pub machine_type: String, // "pc" (i440fx - nhẹ cho máy yếu) hoặc "q35" (PCIe hiện đại)
+
+    #[serde(default = "default_vga")]
+    pub vga_card: String, // "std", "cirrus", "virtio", "qxl"
+
+    #[serde(default)]
+    pub low_spec_mode: bool, // Tối ưu máy yếu: 1 CPU, 512MB RAM, tắt audio phức tạp
+
+    #[serde(default = "default_true")]
+    pub sound_enabled: bool,
+
     pub drives: Vec<VmDrive>,
     pub iso_path: Option<String>,
     pub shared_dir: Option<String>,
-    pub display_type: String, // "gtk", "sdl", "vnc"
+
+    #[serde(default = "default_display")]
+    pub display_type: String, // "sdl", "gtk"
+
     pub qmp_port: u16,
     pub created_at: String,
     pub notes: String,
@@ -53,11 +84,11 @@ impl VmConfig {
         let id = generate_id("vm");
         let created_at = current_timestamp_str();
 
-        let (os_variant, cpu_cores, memory_mb, disk_size_gb, accel) = match os_type {
-            "windows" => ("win11", 4, 8192, 64, "whpx"),
-            "android" => ("android-x86", 2, 4096, 16, "whpx"),
-            "slitaz" => ("slitaz", 2, 1024, 4, "tcg"),
-            "linux" | _ => ("ubuntu", 2, 4096, 32, "whpx"),
+        let (os_variant, cpu_cores, memory_mb, disk_size_gb, accel, machine_type, low_spec, sound) = match os_type {
+            "windows" => ("win11", 4, 4096, 64, "whpx", "q35", false, true),
+            "android" => ("android-x86", 2, 2048, 16, "whpx", "pc", false, true),
+            "slitaz" => ("slitaz", 1, 512, 4, "tcg", "pc", true, false),
+            "linux" | _ => ("ubuntu", 2, 2048, 32, "whpx", "pc", false, true),
         };
 
         let safe_name = name
@@ -66,7 +97,7 @@ impl VmConfig {
             .chars()
             .filter(|c| c.is_alphanumeric() || *c == '-')
             .collect::<String>();
-        let disk_filename = format!("{}.qcow2", safe_name);
+        let disk_filename = format!("{}.qcow2", if safe_name.is_empty() { "disk".to_string() } else { safe_name });
 
         let drive_id = generate_id("disk");
         let drives = vec![VmDrive {
@@ -87,27 +118,27 @@ impl VmConfig {
             cpu_cores,
             memory_mb,
             accel: accel.to_string(),
+            machine_type: machine_type.to_string(),
+            vga_card: "std".to_string(),
+            low_spec_mode: low_spec,
+            sound_enabled: sound,
             drives,
             iso_path: iso,
             shared_dir: None,
             display_type: "sdl".to_string(),
             qmp_port: 0,
             created_at,
-            notes: format!("Tạo bởi AeroVM"),
+            notes: "Tạo bởi AeroVM".to_string(),
         }
     }
 
-    pub fn vm_dir(&self, base_dir: &std::path::Path) -> PathBuf {
-        base_dir.join(&self.id)
-    }
-
-    pub fn primary_disk_path(&self, base_dir: &std::path::Path) -> Option<PathBuf> {
+    pub fn primary_disk_path(&self, base_dir: &Path) -> Option<PathBuf> {
+        let vm_dir = base_dir.join(&self.id);
         self.drives.iter().find(|d| !d.is_cdrom).map(|d| {
-            let p = std::path::Path::new(&d.path);
-            if p.is_absolute() {
-                p.to_path_buf()
+            if Path::new(&d.path).is_absolute() {
+                PathBuf::from(&d.path)
             } else {
-                self.vm_dir(base_dir).join(&d.path)
+                vm_dir.join(&d.path)
             }
         })
     }

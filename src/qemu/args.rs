@@ -7,63 +7,110 @@ impl QemuArgs {
     pub fn build(cfg: &VmConfig, base_dir: &Path) -> Vec<String> {
         let mut args = Vec::new();
 
-        // Tên máy ảo
+        // 1. Tên máy ảo
         args.push("-name".to_string());
         args.push(cfg.name.clone());
 
-        // Máy ảo Q35 & Chế độ tăng tốc (WHPX hoặc TCG)
+        // 2. Loại máy (pc i440fx cho máy yếu / q35 cho máy hiện đại)
+        let mach = if cfg.machine_type.trim().is_empty() {
+            if cfg.os_type == "slitaz" || cfg.low_spec_mode {
+                "pc"
+            } else {
+                "q35"
+            }
+        } else if cfg.low_spec_mode {
+            "pc"
+        } else {
+            cfg.machine_type.as_str()
+        };
+
         args.push("-machine".to_string());
         if cfg.accel == "whpx" {
-            // WHPX tăng tốc phần cứng cho Windows 10/11, Ubuntu, Android
-            args.push("q35,accel=whpx:tcg".to_string());
+            // WHPX tăng tốc phần cứng
+            args.push(format!("{},accel=whpx:tcg", mach));
             args.push("-cpu".to_string());
-            args.push("qemu64".to_string());
+            args.push("qemu64".to_string()); // qemu64 tương thích 100% với WHPX trên Windows, tránh crash CPU host
         } else {
-            // TCG mô phỏng: tương thích 100% cho SliTaz, Linux cổ, DOS
-            args.push("q35,accel=tcg".to_string());
+            // TCG mô phỏng: tương thích 100% không lo lỗi CPU
+            args.push(format!("{},accel=tcg", mach));
             args.push("-cpu".to_string());
             args.push("qemu64".to_string());
         }
 
-        // CPU Cores & RAM
+        // 3. Số nhân CPU & RAM
+        let cores = if cfg.low_spec_mode {
+            cfg.cpu_cores.min(2).max(1)
+        } else {
+            cfg.cpu_cores.max(1)
+        };
         args.push("-smp".to_string());
-        args.push(format!("cores={}", cfg.cpu_cores));
+        args.push(format!("cores={}", cores));
 
+        let mem = if cfg.low_spec_mode {
+            cfg.memory_mb.min(1024).max(256)
+        } else {
+            cfg.memory_mb.max(256)
+        };
         args.push("-m".to_string());
-        args.push(format!("{}M", cfg.memory_mb));
+        args.push(format!("{}M", mem));
 
-        // Bàn phím & Chuột tuyệt đối (USB Tablet không bị kẹt chuột)
-        args.push("-device".to_string());
-        args.push("nec-usb-xhci".to_string());
+        // 4. Đồng hồ thời gian thực RTC ổn định, tránh trôi nhịp/lỗi timer trên máy cấu hình yếu
+        args.push("-rtc".to_string());
+        args.push("base=localtime,clock=host".to_string());
+
+        // 5. Bàn phím & Chuột tuyệt đối (USB Tablet không bị kẹt chuột)
+        if mach == "q35" {
+            args.push("-device".to_string());
+            args.push("nec-usb-xhci".to_string());
+        }
         args.push("-device".to_string());
         args.push("usb-tablet".to_string());
 
-        // Card âm thanh Intel HDA
-        args.push("-device".to_string());
-        args.push("intel-hda".to_string());
-        args.push("-device".to_string());
-        args.push("hda-duplex".to_string());
+        // 6. Card âm thanh (chỉ bật khi không ở chế độ máy yếu)
+        if cfg.sound_enabled && !cfg.low_spec_mode {
+            args.push("-device".to_string());
+            args.push("intel-hda".to_string());
+            args.push("-device".to_string());
+            args.push("hda-duplex".to_string());
+        }
 
-        // Card đồ họa chuẩn VGA (tương thích 100% mọi OS, hiển thị ngay lập tức)
+        // 7. Card đồ họa (std, cirrus, virtio, qxl)
+        let vga = if cfg.low_spec_mode {
+            "std"
+        } else if cfg.vga_card.trim().is_empty() {
+            "std"
+        } else {
+            cfg.vga_card.as_str()
+        };
         args.push("-vga".to_string());
-        args.push("std".to_string());
+        args.push(vga.to_string());
 
-        // Mạng VirtIO NAT
+        // 8. Mạng (e1000 tương thích tối đa hoặc virtio-net-pci)
         args.push("-netdev".to_string());
         args.push("user,id=net0".to_string());
         args.push("-device".to_string());
-        args.push("virtio-net-pci,netdev=net0".to_string());
+        if cfg.low_spec_mode || cfg.os_type == "slitaz" {
+            args.push("e1000,netdev=net0".to_string());
+        } else {
+            args.push("virtio-net-pci,netdev=net0".to_string());
+        }
 
-        // Ổ đĩa ảo chính
+        // 9. Ổ đĩa ảo chính
         if let Some(disk_path) = cfg.primary_disk_path(base_dir) {
             args.push("-drive".to_string());
+            let drive_if = if cfg.low_spec_mode || cfg.os_type == "slitaz" {
+                "ide"
+            } else {
+                "virtio"
+            };
             args.push(format!(
-                "file={},if=virtio,format=qcow2,cache=writeback",
-                disk_path.to_string_lossy()
+                "file={},if={},format=qcow2,cache=writeback",
+                disk_path.to_string_lossy(),
+                drive_if
             ));
         }
 
-        // Ổ đĩa CD-ROM cài đặt (ISO)
+        // 10. Ổ đĩa CD-ROM cài đặt (ISO)
         if let Some(ref iso) = cfg.iso_path {
             if !iso.trim().is_empty() && std::path::Path::new(iso).exists() {
                 args.push("-cdrom".to_string());
@@ -71,11 +118,11 @@ impl QemuArgs {
             }
         }
 
-        // Menu Boot & Thứ tự Boot (ưu tiên CD-ROM trước)
+        // 11. Menu Boot & Thứ tự Boot (ưu tiên CD-ROM trước)
         args.push("-boot".to_string());
         args.push("order=dcn,menu=on".to_string());
 
-        // Hiển thị giao diện cửa sổ khách qua SDL (Win32/DirectX native, siêu mượt, không lỗi GTK)
+        // 12. Bộ hiển thị giao diện SDL (DirectX/Win32 Native)
         match cfg.display_type.as_str() {
             "gtk" => {
                 args.push("-display".to_string());

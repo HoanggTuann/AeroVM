@@ -7,7 +7,11 @@
 ## ✨ Điểm nổi bật
 
 * 🦀 **100% Rust Backend**: Tốc độ phản hồi tức thì, file thực thi chỉ **~2 MB**, tiêu thụ cực ít RAM (< 15 MB).
-* 🍏 **Giao diện chuẩn phong cách UTM**: Dark glassmorphism, hiệu ứng mờ acrylic mượt mà, sidebar máy ảo trực quan.
+* 🍏 **Giao diện chuẩn phong cách UTM Studio**: Dark glassmorphism, hiệu ứng mờ acrylic mượt mà, hệ thống Tab điều hướng: **Tổng quan**, **Cài đặt máy ảo** và **Nhật ký Console**.
+* ⚙️ **Chuyển đổi và tùy biến cài đặt máy ảo linh hoạt**: Dễ dàng thay đổi số nhân CPU, dung lượng RAM, đĩa ảo, card màn hình VGA, âm thanh và file ISO ngay trong giao diện.
+* 📦 **Trình cài đặt riêng biệt (`install.bat`)**: Cài đặt ứng dụng vào thư mục riêng biệt `%LOCALAPPDATA%\Programs\AeroVM`, tạo lối tắt Desktop và Start Menu 1 chạm.
+* ⚡ **Gộp tiến trình & Chạy ngầm 100%**: 0 cửa sổ console đen cmd phiền toái trên Desktop, kiểm soát toàn bộ tiến trình ảo hóa ngầm.
+* 🐢 **Chế độ máy cấu hình yếu (Low-Spec Mode)**: Tự động tối ưu hóa tài nguyên cho máy tính RAM/CPU thấp chạy mượt mà không bị treo đơ.
 * ⚡ **Tăng tốc phần cứng WHPX & TCG Mode**: Tận dụng trực tiếp **Windows Hypervisor Platform** (`-accel whpx`), đồng thời hỗ trợ chuyển đổi tức thì sang chế độ **TCG Software Emulation** tương thích 100% với các bản phân phối Linux siêu nhẹ (SliTaz, TinyCore...) không hỗ trợ ngắt WHPX.
 * 🖥️ **Hiển thị trực tiếp SDL mượt mà**: Chuyển đổi sang backend hiển thị SDL (`-display sdl`), khắc phục hoàn toàn lỗi màn hình đen GTK (`Guest has not initialized the display`) trên Windows.
 * 🧙‍♂️ **Wizard tạo máy ảo thông minh**:

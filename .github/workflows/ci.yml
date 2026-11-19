@@ -32,9 +32,11 @@ jobs:
         run: |
           New-Item -ItemType Directory -Path dist -Force
           Copy-Item target/release/aerovm.exe dist/
+          Copy-Item install.bat dist/
+          Copy-Item uninstall.bat dist/
           Copy-Item run.bat dist/
           Copy-Item README.md dist/
-          Compress-Archive -Path "dist/*" -DestinationPath AeroVM-Windows-x64-v0.1.2.zip -Force
+          Compress-Archive -Path "dist/*" -DestinationPath AeroVM-Windows-x64-v0.1.3.zip -Force
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
@@ -46,19 +48,32 @@ jobs:
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v0.1.2
-          name: "AeroVM v0.1.2 (Windows x64 - SDL Display & Engine Toggle)"
+          tag_name: v0.1.3
+          name: "AeroVM v0.1.3 (Windows x64 - Native Desktop UI & Dedicated Installer)"
           body: |
-            ## 🚀 AeroVM v0.1.2 - Native SDL Display & Bộ Chuyển Đổi Engine
+            ## 🚀 AeroVM v0.1.3 - Giao Diện UTM Chuyên Nghiệp, Quản Lý Cài Đặt & Trình Cài Đặt Riêng
 
-            ### 🛠️ Các cải tiến cốt lõi:
-            * **Cửa sổ Native SDL Display**: Chuyển toàn bộ hiển thị sang bộ dựng hình **SDL DirectX/Win32 Native**. Khắc phục triệt để tình trạng cửa sổ GTK bị màn hình đen hoặc báo `Guest has not initialized the display (yet)`. Màn hình boot, logo, console và desktop hiển thị tức thì.
-            * **Nút chuyển đổi WHPX ⚡ / TCG 🐢 trực tiếp trên giao diện**:
-              * **⚡ WHPX (Phần cứng)**: Tối ưu cho Windows 10/11, Ubuntu 24.04, Android.
-              * **🐢 TCG (Mô phỏng tương thích)**: Tương thích 100% cho SliTaz, Linux cổ, DOS... không bị lỗi ngắt timer hay MSI injection.
-            * **Mẫu SliTaz GNU/Linux Live**: Mặc định cấu hình sẵn chế độ TCG và SDL, bấm Khởi động là chạy ngay lập tức.
-            * **Sửa lỗi tên máy ảo có ký tự đặc biệt**: Tự động chuẩn hóa tên ổ đĩa ảo tránh lỗi đường dẫn file.
+            ### 🌟 Các cải tiến đột phá:
+            * **🎨 Giao diện UTM Studio phong cách macOS**: 
+              * Thiết kế lại hoàn toàn theo phong cách Dark Glassmorphism, hiệu ứng mờ Acrylic tự nhiên.
+              * Hệ thống Tab điều hướng mượt mà: **📌 Tổng quan**, **⚙️ Cài đặt máy ảo**, **📜 Nhật ký Console Live**.
+              * Triệt tiêu hoàn toàn cảm giác trang web: chạy như ứng dụng Native Desktop độc lập.
+            * **⚙️ Chuyển đổi và chỉnh sửa cài đặt máy ảo linh hoạt**:
+              * Tab **Cài đặt** cho phép tùy biến mọi thông số của máy ảo đã tạo: Tên, Engine ảo hóa (WHPX ⚡ vs TCG 🔄), Số nhân CPU, Dung lượng RAM (256MB - 16GB), Bo mạch (pc vs q35), Card đồ họa VGA, Âm thanh và tệp ảnh ISO.
+              * Nút **"Lưu thay đổi cài đặt"** cập nhật tức thì vào máy ảo.
+            * **🐢 Tối ưu triệt để cho máy tính cấu hình yếu (Low-Spec Mode)**:
+              * Bổ sung tính năng bật/tắt **"Chế độ máy cấu hình yếu"**: Tự động giới hạn CPU 1 nhân, RAM 256MB/512MB, dùng bo mạch i440fx siêu nhẹ và tắt âm thanh phức tạp giúp máy yếu không bị đơ hoặc văng khi chạy.
+              * Sửa lỗi CPU `qemu64` trên Windows Hypervisor Platform (WHPX), khắc phục tình trạng máy ảo chạy được một đoạn rồi dừng.
+              * Tự động sửa lỗi cấu hình cũ của SliTaz Live sang chế độ TCG tương thích 100%.
+            * **📦 Trình cài đặt riêng biệt (`install.bat`) & Thư mục riêng**:
+              * Đi kèm file **`install.bat`** tự động cài đặt ứng dụng vào thư mục riêng biệt `%LOCALAPPDATA%\Programs\AeroVM`.
+              * Tự động tạo biểu tượng Shortcut trên **Desktop** và **Start Menu**.
+              * Thêm tính năng **"📂 Mở thư mục"** trên giao diện: 1-click mở ngay thư mục chứa ổ đĩa ảo của máy ảo trong Windows Explorer.
+            * **⚡ Gộp tiến trình & Chạy ngầm hoàn toàn 100%**:
+              * Đóng gói mã nguồn với `#![windows_subsystem = "windows"]`, không tạo bất kỳ cửa sổ console đen cmd nào trên màn hình desktop.
+              * Tiến trình QEMU chạy ngầm hoàn toàn qua cờ `CREATE_NO_WINDOW`.
+              * Bổ sung bảng **"⚡ Giám sát tiến trình ngầm"** trên giao diện để theo dõi PID và nút dừng tất cả tiến trình 1 chạm.
 
-            ### 📦 Gói phát hành:
-            * **`AeroVM-Windows-x64-v0.1.2.zip`**: Bao gồm `aerovm.exe`, `run.bat` và hướng dẫn.
-          files: AeroVM-Windows-x64-v0.1.2.zip
+            ### 📦 Gói cài đặt phát hành:
+            * **`AeroVM-Windows-x64-v0.1.3.zip`**: Bao gồm `install.bat` (trình cài đặt 1 chạm), `uninstall.bat`, `aerovm.exe`, `run.bat` và tài liệu.
+          files: AeroVM-Windows-x64-v0.1.3.zip

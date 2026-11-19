@@ -3,537 +3,1468 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AeroVM - Trình quản lý máy ảo phong cách UTM</title>
+  <title>AeroVM - Trình Quản Lý Máy Ảo Phong Cách UTM</title>
   <style>
     :root {
-      --bg: #0d1117;
-      --sidebar-bg: rgba(22, 27, 34, 0.85);
-      --card-bg: rgba(30, 37, 48, 0.7);
+      --bg: #090d16;
+      --sidebar-bg: rgba(16, 22, 34, 0.82);
+      --main-bg: rgba(12, 17, 28, 0.94);
+      --card-bg: rgba(25, 34, 51, 0.65);
+      --card-hover: rgba(35, 47, 71, 0.8);
       --card-border: rgba(255, 255, 255, 0.08);
-      --card-hover: rgba(43, 53, 68, 0.9);
+      --card-border-active: rgba(56, 139, 253, 0.45);
       --text-main: #f0f6fc;
       --text-sub: #8b949e;
+      --text-muted: #6e7681;
       --primary: #388bfd;
       --primary-hover: #58a6ff;
+      --primary-glow: rgba(56, 139, 253, 0.25);
       --success: #3fb950;
+      --success-glow: rgba(63, 185, 80, 0.25);
       --danger: #f85149;
+      --danger-hover: #ff6b6b;
       --warning: #d29922;
-      --radius-lg: 16px;
-      --radius-md: 10px;
+      --radius-xl: 18px;
+      --radius-lg: 12px;
+      --radius-md: 8px;
       --radius-sm: 6px;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text", "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
-    body { background-color: var(--bg); color: var(--text-main); height: 100vh; display: flex; overflow: hidden; user-select: none; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font-stack); }
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      height: 100vh;
+      display: flex;
+      overflow: hidden;
+      user-select: none;
+      -webkit-font-smoothing: antialiased;
+    }
 
-    /* Layout */
-    .app-container { display: flex; width: 100vw; height: 100vh; backdrop-filter: blur(20px); }
-    
-    /* Sidebar */
-    .sidebar { width: 320px; background: var(--sidebar-bg); border-right: 1px solid var(--card-border); display: flex; flex-direction: column; flex-shrink: 0; }
-    .sidebar-header { padding: 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--card-border); }
-    .logo-box { display: flex; align-items: center; gap: 12px; }
-    .logo-icon { width: 36px; height: 36px; background: linear-gradient(135deg, #1f6feb, #388bfd, #58a6ff); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 4px 12px rgba(56, 139, 253, 0.35); }
-    .logo-title { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
-    .logo-badge { font-size: 10px; background: rgba(63, 185, 80, 0.15); color: var(--success); border: 1px solid rgba(63, 185, 80, 0.3); padding: 2px 7px; border-radius: 12px; font-weight: 600; text-transform: uppercase; }
+    /* Custom Scrollbars */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.24); }
 
-    .btn-new-vm { margin: 16px 20px 8px 20px; background: linear-gradient(135deg, #238636, #2ea043); color: #fff; border: none; border-radius: var(--radius-md); padding: 12px 16px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(46, 160, 67, 0.25); }
-    .btn-new-vm:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(46, 160, 67, 0.35); filter: brightness(1.05); }
+    .app-window {
+      display: flex;
+      width: 100vw;
+      height: 100vh;
+      backdrop-filter: blur(30px);
+      -webkit-backdrop-filter: blur(30px);
+    }
 
-    .vm-list { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 6px; }
-    .vm-item { padding: 12px 14px; border-radius: var(--radius-md); display: flex; align-items: center; gap: 12px; cursor: pointer; transition: all 0.15s ease; border: 1px solid transparent; }
-    .vm-item:hover { background: rgba(255, 255, 255, 0.04); }
-    .vm-item.active { background: rgba(56, 139, 253, 0.12); border-color: rgba(56, 139, 253, 0.35); }
-    .vm-os-icon { width: 38px; height: 38px; border-radius: 8px; background: rgba(255, 255, 255, 0.06); display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+    /* Sidebar UTM Style */
+    .sidebar {
+      width: 310px;
+      background: var(--sidebar-bg);
+      border-right: 1px solid var(--card-border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      z-index: 2;
+    }
+
+    .mac-titlebar {
+      height: 48px;
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid var(--card-border);
+    }
+    .traffic-lights {
+      display: flex;
+      gap: 7px;
+    }
+    .traffic-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      transition: opacity 0.2s;
+    }
+    .dot-close { background: #ff5f56; }
+    .dot-min { background: #ffbd2e; }
+    .dot-max { background: #27c93f; }
+
+    .sidebar-header {
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .brand-box {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .brand-icon {
+      width: 38px;
+      height: 38px;
+      background: linear-gradient(135deg, #1f6feb 0%, #388bfd 50%, #58a6ff 100%);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 4px 16px var(--primary-glow);
+    }
+    .brand-name {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+    .brand-sub {
+      font-size: 11px;
+      color: var(--primary);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .btn-create-vm {
+      margin: 4px 16px 12px 16px;
+      background: linear-gradient(135deg, #238636 0%, #2ea043 100%);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: var(--radius-md);
+      padding: 11px 16px;
+      font-size: 13.5px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 4px 14px var(--success-glow);
+    }
+    .btn-create-vm:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(46, 160, 67, 0.4);
+      filter: brightness(1.06);
+    }
+    .btn-create-vm:active { transform: translateY(0); }
+
+    .vm-list-title {
+      padding: 8px 20px 4px 20px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+
+    .vm-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .vm-item {
+      padding: 11px 13px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      border: 1px solid transparent;
+      position: relative;
+    }
+    .vm-item:hover {
+      background: rgba(255, 255, 255, 0.04);
+    }
+    .vm-item.active {
+      background: rgba(56, 139, 253, 0.14);
+      border-color: var(--card-border-active);
+      box-shadow: inset 0 0 12px rgba(56, 139, 253, 0.1);
+    }
+    .vm-os-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 9px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
     .vm-info { flex: 1; min-width: 0; }
-    .vm-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .vm-meta { font-size: 12px; color: var(--text-sub); margin-top: 2px; }
-    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #484f58; flex-shrink: 0; }
-    .status-dot.running { background: var(--success); box-shadow: 0 0 8px var(--success); animation: pulse 2s infinite; }
+    .vm-name {
+      font-size: 13.5px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .vm-meta {
+      font-size: 11.5px;
+      color: var(--text-sub);
+      margin-top: 2px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .badge-accel {
+      font-size: 10px;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-weight: 700;
+    }
+    .badge-accel.whpx { background: rgba(56, 139, 253, 0.2); color: #58a6ff; }
+    .badge-accel.tcg { background: rgba(210, 153, 34, 0.2); color: #e3b341; }
 
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #484f58;
+      flex-shrink: 0;
+    }
+    .status-dot.running {
+      background: var(--success);
+      box-shadow: 0 0 10px var(--success);
+      animation: pulse 1.8s infinite;
+    }
     @keyframes pulse {
-      0% { box-shadow: 0 0 0 0 rgba(63, 185, 80, 0.6); }
-      70% { box-shadow: 0 0 0 6px rgba(63, 185, 80, 0); }
+      0% { box-shadow: 0 0 0 0 rgba(63, 185, 80, 0.7); }
+      70% { box-shadow: 0 0 0 7px rgba(63, 185, 80, 0); }
       100% { box-shadow: 0 0 0 0 rgba(63, 185, 80, 0); }
     }
 
-    /* Main Content View */
-    .main-view { flex: 1; display: flex; flex-direction: column; background: radial-gradient(circle at top right, rgba(56, 139, 253, 0.05), transparent 400px); overflow-y: auto; }
-    .toolbar { height: 68px; padding: 0 28px; border-bottom: 1px solid var(--card-border); display: flex; align-items: center; justify-content: space-between; }
-    .toolbar-left { display: flex; align-items: center; gap: 14px; }
-    .vm-title { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
-    .badge-status { font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 20px; background: rgba(255, 255, 255, 0.06); color: var(--text-sub); }
-    .badge-status.running { background: rgba(63, 185, 80, 0.15); color: var(--success); border: 1px solid rgba(63, 185, 80, 0.3); }
+    .sidebar-footer {
+      padding: 12px 16px;
+      border-top: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11.5px;
+      color: var(--text-sub);
+    }
+    .btn-proc-toggle {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+    .btn-proc-toggle:hover { background: rgba(255, 255, 255, 0.1); }
 
-    .toolbar-actions { display: flex; align-items: center; gap: 10px; }
-    .btn-action { height: 38px; padding: 0 16px; border-radius: var(--radius-sm); border: 1px solid var(--card-border); background: var(--card-bg); color: var(--text-main); font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; cursor: pointer; transition: all 0.15s ease; }
-    .btn-action:hover { background: var(--card-hover); border-color: rgba(255, 255, 255, 0.2); }
-    .btn-action.btn-start { background: #238636; border-color: #2ea043; color: #fff; }
-    .btn-action.btn-start:hover { background: #2ea043; }
-    .btn-action.btn-stop { background: rgba(248, 81, 73, 0.15); border-color: rgba(248, 81, 73, 0.3); color: var(--danger); }
+    /* Main Content Area */
+    .main-stage {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--main-bg);
+      overflow-y: auto;
+      position: relative;
+    }
+
+    .top-actionbar {
+      height: 64px;
+      padding: 0 28px;
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(16, 22, 34, 0.5);
+      backdrop-filter: blur(10px);
+    }
+    .header-info { display: flex; align-items: center; gap: 14px; }
+    .vm-title { font-size: 19px; font-weight: 700; letter-spacing: -0.3px; }
+    .badge-status {
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text-sub);
+    }
+    .badge-status.running {
+      background: rgba(63, 185, 80, 0.15);
+      color: var(--success);
+      border: 1px solid rgba(63, 185, 80, 0.3);
+    }
+
+    .header-actions { display: flex; align-items: center; gap: 9px; }
+    .btn-action {
+      height: 36px;
+      padding: 0 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--card-border);
+      background: var(--card-bg);
+      color: var(--text-main);
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .btn-action:hover {
+      background: var(--card-hover);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+    .btn-action.btn-start {
+      background: linear-gradient(135deg, #238636, #2ea043);
+      border-color: #2ea043;
+      color: #fff;
+      box-shadow: 0 2px 10px var(--success-glow);
+    }
+    .btn-action.btn-start:hover { filter: brightness(1.08); }
+    .btn-action.btn-stop {
+      background: rgba(248, 81, 73, 0.15);
+      border-color: rgba(248, 81, 73, 0.35);
+      color: var(--danger);
+    }
     .btn-action.btn-stop:hover { background: rgba(248, 81, 73, 0.25); }
 
-    /* Detail Cards */
-    .content-body { padding: 28px; display: flex; flex-direction: column; gap: 24px; max-width: 900px; }
-    .spec-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
-    .card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius-lg); padding: 20px; transition: all 0.2s ease; }
-    .card:hover { border-color: rgba(255, 255, 255, 0.15); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25); }
-    .card-icon { font-size: 26px; margin-bottom: 12px; }
-    .card-title { font-size: 13px; font-weight: 600; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.5px; }
-    .card-val { font-size: 18px; font-weight: 700; margin-top: 6px; color: var(--text-main); }
-    .card-desc { font-size: 13px; color: var(--text-sub); margin-top: 4px; line-height: 1.4; }
+    /* Modern Tabs Bar */
+    .nav-tabs {
+      display: flex;
+      padding: 0 28px;
+      gap: 20px;
+      border-bottom: 1px solid var(--card-border);
+      background: rgba(16, 22, 34, 0.3);
+    }
+    .nav-tab {
+      padding: 12px 2px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-sub);
+      cursor: pointer;
+      position: relative;
+      transition: color 0.15s ease;
+    }
+    .nav-tab:hover { color: var(--text-main); }
+    .nav-tab.active { color: var(--primary-hover); }
+    .nav-tab.active::after {
+      content: "";
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--primary);
+      border-radius: 2px;
+    }
 
-    /* Empty state */
-    .empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-sub); gap: 16px; padding: 40px; text-align: center; }
-    .empty-icon { font-size: 64px; opacity: 0.6; }
+    /* Tab Panes */
+    .tab-content { padding: 24px 28px; max-width: 960px; }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; animation: fadeIn 0.15s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Overview Grid */
+    .spec-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      padding: 18px 20px;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .card:hover {
+      border-color: rgba(255, 255, 255, 0.14);
+      background: var(--card-hover);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+    }
+    .card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .card-icon { font-size: 24px; }
+    .card-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+    .card-val {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-top: 4px;
+    }
+    .card-desc {
+      font-size: 12.5px;
+      color: var(--text-sub);
+      margin-top: 5px;
+      line-height: 1.45;
+    }
+    .card-footer-action { margin-top: 12px; }
+
+    /* Settings Form */
+    .settings-panel {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-xl);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .settings-section-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-main);
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+    .form-label {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--text-sub);
+      display: flex;
+      justify-content: space-between;
+    }
+    .form-control {
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      color: #fff;
+      font-size: 13.5px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .form-control:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px var(--primary-glow);
+    }
+    select.form-control { cursor: pointer; }
+    select.form-control option { background: #161b22; color: #fff; }
+
+    /* Segmented Engine Selector */
+    .segmented-control {
+      display: flex;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 4px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--card-border);
+      gap: 4px;
+    }
+    .segment-btn {
+      flex: 1;
+      padding: 9px 12px;
+      font-size: 12.5px;
+      font-weight: 600;
+      background: transparent;
+      border: none;
+      color: var(--text-sub);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .segment-btn:hover { color: #fff; }
+    .segment-btn.active {
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 2px 8px var(--primary-glow);
+    }
+    .segment-btn.active.tcg {
+      background: var(--warning);
+      color: #000;
+      box-shadow: 0 2px 8px rgba(210, 153, 34, 0.4);
+    }
+
+    /* iOS Style Toggle Switch */
+    .switch-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
+    }
+    .switch-info { flex: 1; padding-right: 16px; }
+    .switch-title { font-size: 13.5px; font-weight: 600; color: var(--text-main); }
+    .switch-desc { font-size: 12px; color: var(--text-sub); margin-top: 2px; }
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background-color: #30363d;
+      transition: .25s;
+      border-radius: 24px;
+    }
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .25s;
+      border-radius: 50%;
+    }
+    input:checked + .toggle-slider { background-color: var(--primary); }
+    input:checked + .toggle-slider:before { transform: translateX(20px); }
+
+    /* Range Sliders */
+    .slider-box { display: flex; align-items: center; gap: 14px; }
+    .slider-box input[type=range] {
+      flex: 1;
+      height: 6px;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+    .slider-badge {
+      min-width: 80px;
+      text-align: right;
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--primary-hover);
+    }
+
+    /* Terminal Logs */
+    .log-box {
+      background: #04060a;
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      height: 480px;
+      overflow-y: auto;
+      font-family: "Cascadia Code", Consolas, "Courier New", monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      color: #98c379;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .log-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    /* Empty State View */
+    .empty-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-sub);
+      gap: 16px;
+      padding: 40px;
+      text-align: center;
+    }
+    .empty-icon { font-size: 64px; opacity: 0.5; }
     .empty-title { font-size: 20px; font-weight: 700; color: var(--text-main); }
 
-    /* Modal / Wizard */
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.65); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 100; }
+    /* Modal / Dialog */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
     .modal-overlay.open { display: flex; }
-    .modal-card { width: 560px; background: #161b22; border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 20px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6); overflow: hidden; display: flex; flex-direction: column; animation: modalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
-    @keyframes modalPop { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .modal-card {
+      width: 580px;
+      background: #121824;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: var(--radius-xl);
+      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.7);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      animation: modalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes modalPop {
+      from { transform: scale(0.96); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .modal-header {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-title { font-size: 16px; font-weight: 700; }
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 22px;
+      color: var(--text-sub);
+      cursor: pointer;
+    }
+    .modal-close:hover { color: #fff; }
+    .modal-body {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      max-height: 72vh;
+      overflow-y: auto;
+    }
+    .modal-footer {
+      padding: 14px 24px;
+      border-top: 1px solid var(--card-border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      background: rgba(0, 0, 0, 0.2);
+    }
 
-    .modal-header { padding: 20px 24px; border-bottom: 1px solid var(--card-border); display: flex; justify-content: space-between; align-items: center; }
-    .modal-title { font-size: 17px; font-weight: 700; }
-    .modal-close { background: none; border: none; font-size: 20px; color: var(--text-sub); cursor: pointer; }
-    .modal-body { padding: 24px; display: flex; flex-direction: column; gap: 20px; max-height: 75vh; overflow-y: auto; }
-    .modal-footer { padding: 16px 24px; border-top: 1px solid var(--card-border); display: flex; justify-content: flex-end; gap: 12px; background: rgba(0, 0, 0, 0.15); }
+    .os-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+    .os-option {
+      padding: 12px 8px;
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .os-option:hover {
+      border-color: rgba(255, 255, 255, 0.25);
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .os-option.selected {
+      border-color: var(--primary);
+      background: rgba(56, 139, 253, 0.14);
+      box-shadow: 0 0 12px var(--primary-glow);
+    }
+    .os-option-icon { font-size: 26px; margin-bottom: 4px; }
+    .os-option-name { font-size: 12px; font-weight: 600; }
 
-    .os-selector { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-    .os-card { padding: 14px; border: 1px solid var(--card-border); border-radius: var(--radius-md); text-align: center; cursor: pointer; transition: all 0.15s ease; background: rgba(255, 255, 255, 0.02); }
-    .os-card:hover { border-color: rgba(255, 255, 255, 0.2); }
-    .os-card.selected { border-color: var(--primary); background: rgba(56, 139, 253, 0.1); }
-    .os-card-icon { font-size: 28px; margin-bottom: 6px; }
-    .os-card-name { font-size: 13px; font-weight: 600; }
-
-    .form-group { display: flex; flex-direction: column; gap: 8px; }
-    .form-label { font-size: 13px; font-weight: 600; color: var(--text-sub); }
-    .form-input { background: rgba(0, 0, 0, 0.25); border: 1px solid var(--card-border); border-radius: var(--radius-sm); padding: 10px 14px; color: #fff; font-size: 14px; outline: none; }
-    .form-input:focus { border-color: var(--primary); }
-    .slider-row { display: flex; align-items: center; gap: 16px; }
-    .slider-row input[type=range] { flex: 1; accent-color: var(--primary); }
-    .slider-val { font-size: 14px; font-weight: 700; width: 80px; text-align: right; }
+    /* Toast Notification */
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .toast {
+      background: #1f293d;
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: var(--radius-md);
+      padding: 12px 18px;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      animation: slideIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes slideIn { from { transform: translateX(50px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
   </style>
 </head>
 <body>
-  <div class="app-container">
+  <div class="app-window">
     <!-- Sidebar -->
-    <div class="sidebar">
+    <aside class="sidebar">
+      <div class="mac-titlebar">
+        <div class="traffic-lights">
+          <div class="traffic-dot dot-close" title="Đóng ứng dụng" onclick="exitApp()"></div>
+          <div class="traffic-dot dot-min"></div>
+          <div class="traffic-dot dot-max"></div>
+        </div>
+      </div>
+
       <div class="sidebar-header">
-        <div class="logo-box">
-          <div class="logo-icon">🚀</div>
+        <div class="brand-box">
+          <div class="brand-icon">🚀</div>
           <div>
-            <div class="logo-title">AeroVM</div>
-            <div class="logo-badge">WHPX Acceleration</div>
+            <div class="brand-name">AeroVM</div>
+            <div class="brand-sub">Hypervisor Studio</div>
           </div>
         </div>
       </div>
 
-      <button class="btn-new-vm" id="btnOpenNewModal">
+      <button class="btn-create-vm" id="btnOpenNewModal">
         <span>+</span> Tạo máy ảo mới
       </button>
 
+      <div class="vm-list-title">Danh sách máy ảo</div>
       <div class="vm-list" id="vmListContainer">
-        <!-- VM items populated via JS -->
+        <!-- VMs injected here -->
       </div>
-    </div>
 
-    <!-- Main View -->
-    <div class="main-view" id="mainView">
-      <div class="toolbar" id="topToolbar" style="display: none;">
-        <div class="toolbar-left">
+      <div class="sidebar-footer">
+        <div>Chạy ngầm: <span id="bgStatus" style="color: var(--success); font-weight: 600;">Sẵn sàng</span></div>
+        <button class="btn-proc-toggle" onclick="showProcModal()">⚡ Tiến trình</button>
+      </div>
+    </aside>
+
+    <!-- Main Workspace -->
+    <main class="main-stage" id="mainStage">
+      <!-- Toolbar -->
+      <div class="top-actionbar" id="topToolbar" style="display: none;">
+        <div class="header-info">
           <div class="vm-title" id="vmTitle">Ubuntu 24.04</div>
-          <div class="badge-status" id="vmStatusBadge">Đã tắt</div>
+          <div class="badge-status" id="vmStatusBadge">Đã dừng</div>
         </div>
-        <div class="toolbar-actions">
-          <button class="btn-action btn-start" id="btnStartVm">▶ Chạy</button>
-          <button class="btn-action btn-stop" id="btnStopVm" style="display: none;">⏹ Dừng</button>
-          <button class="btn-action" id="btnDeleteVm" style="color: var(--danger);">🗑️ Xóa</button>
-        </div>
-      </div>
-
-      <div class="content-body" id="vmDetailsBody" style="display: none;">
-        <div class="spec-grid">
-          <div class="card">
-            <div class="card-icon">⚡</div>
-            <div class="card-title">Chế độ vận hành (Engine)</div>
-            <div class="card-val" id="specAccel">WHPX (Near-native)</div>
-            <div class="card-desc" id="accelDesc">Sử dụng Windows Hypervisor Platform tận dụng Intel VT-x / AMD-V tốc độ cao.</div>
-            <div style="margin-top: 10px;">
-              <button class="btn-action" id="btnToggleAccel" style="height: 30px; font-size: 12px; padding: 0 12px; border-radius: 6px;" onclick="toggleAccel()">🔄 Đổi chế độ</button>
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="card-icon">🧠</div>
-            <div class="card-title">Bộ nhớ & Vi xử lý</div>
-            <div class="card-val" id="specCpuRam">4 Nhân · 4096 MB RAM</div>
-            <div class="card-desc">Hỗ trợ ảo hóa phần cứng SMP và cấp phát RAM động.</div>
-          </div>
-
-          <div class="card">
-            <div class="card-icon">💾</div>
-            <div class="card-title">Ổ lưu trữ ảo</div>
-            <div class="card-val" id="specDisk">32 GB QCOW2</div>
-            <div class="card-desc">Định dạng QCOW2 dung lượng động qua giao tiếp VirtIO Block siêu nhanh.</div>
-          </div>
-
-          <div class="card">
-            <div class="card-icon">💿</div>
-            <div class="card-title">Ổ đĩa cài đặt (ISO)</div>
-            <div class="card-val" id="specIso" style="font-size: 14px; word-break: break-all;">Chưa gắn ISO</div>
-            <div class="card-desc">Tệp ảnh ISO nạp lúc khởi động máy ảo.</div>
-            <div style="margin-top: 10px;">
-              <button class="btn-action" style="height: 30px; font-size: 12px; padding: 0 12px; border-radius: 6px;" onclick="promptSetIso()">✏️ Đổi / Gắn file ISO</button>
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="card-icon">🖱️</div>
-            <div class="card-title">Chuột & Bàn phím</div>
-            <div class="card-val">USB Tablet VirtIO</div>
-            <div class="card-desc">Chuột di chuyển tự nhiên giữa Windows và máy ảo mà không bị khóa/kẹt con trỏ.</div>
-          </div>
-
-          <div class="card">
-            <div class="card-icon">🌐</div>
-            <div class="card-title">Mạng máy ảo</div>
-            <div class="card-val">VirtIO PCI NAT</div>
-            <div class="card-desc">Kết nối Internet tự động thông qua giao thức User Mode NAT an toàn.</div>
-          </div>
+        <div class="header-actions">
+          <button class="btn-action btn-start" id="btnStartVm" onclick="startCurrentVm()">▶ Khởi động</button>
+          <button class="btn-action btn-stop" id="btnStopVm" style="display: none;" onclick="stopCurrentVm()">⏹ Dừng</button>
+          <button class="btn-action" onclick="openVmFolder()" title="Mở thư mục chứa file máy ảo trên máy tính">📂 Mở thư mục</button>
+          <button class="btn-action" onclick="switchTab('settings')" title="Chỉnh sửa cấu hình CPU, RAM, ổ đĩa...">⚙️ Cài đặt</button>
+          <button class="btn-action" style="color: var(--danger);" onclick="deleteCurrentVm()" title="Xóa máy ảo này">🗑️ Xóa</button>
         </div>
       </div>
 
+      <!-- Navigation Tabs -->
+      <div class="nav-tabs" id="navTabs" style="display: none;">
+        <div class="nav-tab active" data-tab="overview" onclick="switchTab('overview')">📌 Tổng quan</div>
+        <div class="nav-tab" data-tab="settings" onclick="switchTab('settings')">⚙️ Cài đặt máy ảo</div>
+        <div class="nav-tab" data-tab="logs" onclick="switchTab('logs')">📜 Nhật ký (Log)</div>
+      </div>
+
+      <!-- Workspace Body -->
+      <div class="tab-content" id="workspaceContent" style="display: none;">
+        <!-- TAB 1: OVERVIEW -->
+        <div class="tab-pane active" id="pane-overview">
+          <div class="spec-grid">
+            <div class="card">
+              <div class="card-top">
+                <div class="card-title">Chế độ vận hành</div>
+                <div class="card-icon">⚡</div>
+              </div>
+              <div class="card-val" id="specAccel">WHPX Hardware</div>
+              <div class="card-desc" id="specAccelDesc">Tăng tốc phần cứng trực tiếp qua Windows Hypervisor Platform.</div>
+              <div class="card-footer-action">
+                <button class="btn-action" style="height: 30px; font-size: 11.5px; border-radius: 6px;" onclick="switchTab('settings')">🔄 Thay đổi trong Cài đặt</button>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-top">
+                <div class="card-title">Vi xử lý & Bộ nhớ</div>
+                <div class="card-icon">🧠</div>
+              </div>
+              <div class="card-val" id="specCpuRam">2 Nhân · 2048 MB RAM</div>
+              <div class="card-desc" id="specCpuRamDesc">Được cấp phát và quản lý qua trình điều khiển QEMU.</div>
+            </div>
+
+            <div class="card">
+              <div class="card-top">
+                <div class="card-title">Ổ đĩa ảo chính</div>
+                <div class="card-icon">💾</div>
+              </div>
+              <div class="card-val" id="specDisk">32 GB QCOW2</div>
+              <div class="card-desc">Đĩa ảo nén dung lượng động, mở rộng theo nhu cầu sử dụng thực tế.</div>
+            </div>
+
+            <div class="card">
+              <div class="card-top">
+                <div class="card-title">Ổ đĩa cài đặt (ISO)</div>
+                <div class="card-icon">💿</div>
+              </div>
+              <div class="card-val" id="specIso" style="font-size: 13.5px; word-break: break-all;">Chưa gắn ISO</div>
+              <div class="card-desc">File ISO hệ điều hành được nạp khi khởi động máy ảo.</div>
+            </div>
+
+            <div class="card">
+              <div class="card-top">
+                <div class="card-title">Giao diện hiển thị</div>
+                <div class="card-icon">🖥️</div>
+              </div>
+              <div class="card-val">Native SDL2 Display</div>
+              <div class="card-desc">Hiển thị trực tiếp DirectX/Win32, triệt tiêu hoàn toàn màn hình đen GTK.</div>
+            </div>
+
+            <div class="card">
+              <div class="card-top">
+                <div class="card-title">Thư mục máy ảo</div>
+                <div class="card-icon">📂</div>
+              </div>
+              <div class="card-val" id="specFolder" style="font-size: 12px; word-break: break-all;">~/.aerovm/vms/...</div>
+              <div class="card-footer-action">
+                <button class="btn-action" style="height: 30px; font-size: 11.5px; border-radius: 6px;" onclick="openVmFolder()">📂 Xem trong Explorer</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: SETTINGS (CHUYỂN ĐỔI CÀI ĐẶT MÁY ẢO) -->
+        <div class="tab-pane" id="pane-settings">
+          <div class="settings-panel">
+            <div class="settings-section-title">⚡ Chế độ Tăng tốc & Tương thích</div>
+            <div class="form-group">
+              <label class="form-label">Engine gia tốc ảo hóa</label>
+              <div class="segmented-control">
+                <button type="button" class="segment-btn active" id="btnEngineWhpx" onclick="setSettingEngine('whpx')">
+                  ⚡ WHPX (Phần cứng - Tốc độ cao)
+                </button>
+                <button type="button" class="segment-btn tcg" id="btnEngineTcg" onclick="setSettingEngine('tcg')">
+                  🔄 TCG (Mô phỏng - Tương thích 100%)
+                </button>
+              </div>
+              <div style="font-size: 12px; color: var(--text-sub); margin-top: 4px;" id="engineNote">
+                * Khuyên dùng <b>WHPX</b> cho Ubuntu, Windows, Android. Chọn <b>TCG</b> cho SliTaz hoặc Linux cổ.
+              </div>
+            </div>
+
+            <div class="switch-row">
+              <div class="switch-info">
+                <div class="switch-title">Chế độ máy cấu hình yếu (Low-Spec Mode)</div>
+                <div class="switch-desc">Tự động tối ưu tài nguyên tối đa: giới hạn RAM, dùng chipset i440fx nhẹ, tắt audio ngốn CPU giúp máy tính yếu chạy mượt không bị đơ.</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="cfgLowSpec">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+
+            <div class="settings-section-title">⚙️ Phần cứng máy ảo</div>
+            <div class="form-group">
+              <label class="form-label">Tên máy ảo</label>
+              <input type="text" class="form-control" id="cfgName">
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Số nhân CPU (Cores)</label>
+                <div class="slider-box">
+                  <input type="range" id="cfgCores" min="1" max="8" value="2" oninput="updateSettingSliders()">
+                  <span class="slider-badge" id="badgeCores">2 Cores</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Bộ nhớ RAM (MB)</label>
+                <div class="slider-box">
+                  <input type="range" id="cfgRam" min="256" max="16384" step="256" value="2048" oninput="updateSettingSliders()">
+                  <span class="slider-badge" id="badgeRam">2048 MB</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Bo mạch chủ (Chipset Machine)</label>
+                <select class="form-control" id="cfgMachine">
+                  <option value="pc">pc (i440fx - Siêu nhẹ, khuyên dùng cho máy yếu & Linux cũ)</option>
+                  <option value="q35">q35 (Hiện đại, hỗ trợ chuẩn PCIe và Windows 11)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Card màn hình (VGA)</label>
+                <select class="form-control" id="cfgVga">
+                  <option value="std">std (Standard VGA - Ổn định và mượt nhất)</option>
+                  <option value="cirrus">cirrus (Cực nhẹ, tiết kiệm VRAM tối đa)</option>
+                  <option value="virtio">virtio-vga (Tăng tốc đồ họa Linux)</option>
+                  <option value="qxl">qxl (SPICE Driver)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="switch-row">
+              <div class="switch-info">
+                <div class="switch-title">Âm thanh máy ảo (Sound Card)</div>
+                <div class="switch-desc">Mô phỏng card Intel High Definition Audio (HDA). Tắt tính năng này để giảm tải CPU trên máy yếu.</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="cfgSound">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+
+            <div class="settings-section-title">💿 Đĩa ISO khởi động</div>
+            <div class="form-group">
+              <label class="form-label">Đường dẫn tệp ISO</label>
+              <div style="display: flex; gap: 8px;">
+                <input type="text" class="form-control" style="flex: 1;" id="cfgIso" placeholder="Ví dụ: C:\Users\...\Downloads\slitaz.iso">
+                <button type="button" class="btn-action" onclick="document.getElementById('cfgIso').value = ''">Gỡ ISO</button>
+              </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+              <button class="btn-action" onclick="resetSettings()">Khôi phục mặc định</button>
+              <button class="btn-action btn-start" onclick="saveVmSettings()">💾 Lưu thay đổi cài đặt</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 3: LOGS -->
+        <div class="tab-pane" id="pane-logs">
+          <div class="log-toolbar">
+            <div style="font-size: 13px; font-weight: 600; color: var(--text-sub);">Nhật ký hoạt động QEMU Console</div>
+            <button class="btn-action" style="height: 30px; font-size: 11.5px;" onclick="loadLogs()">🔄 Làm mới nhật ký</button>
+          </div>
+          <div class="log-box" id="logContent">Đang tải nhật ký...</div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
       <div class="empty-state" id="emptyStateView">
         <div class="empty-icon">🪐</div>
         <div class="empty-title">Chưa chọn máy ảo nào</div>
-        <div>Chọn một máy ảo từ danh sách bên trái hoặc nhấn "+ Tạo máy ảo mới" để bắt đầu.</div>
+        <div>Chọn một máy ảo từ thanh bên trái hoặc nhấn "+ Tạo máy ảo mới" để bắt đầu trải nghiệm.</div>
       </div>
-    </div>
+    </main>
   </div>
 
-  <!-- Wizard Modal -->
+  <!-- Wizard Modal (Tạo máy ảo mới) -->
   <div class="modal-overlay" id="wizardModal">
     <div class="modal-card">
       <div class="modal-header">
         <div class="modal-title">Tạo máy ảo mới (UTM Style)</div>
-        <button class="modal-close" id="btnCloseWizard">&times;</button>
+        <button class="modal-close" onclick="closeWizard()">&times;</button>
       </div>
 
       <div class="modal-body">
         <div class="form-group">
           <label class="form-label">Chọn Hệ điều hành mẫu</label>
-          <div class="os-selector">
-            <div class="os-card selected" data-os="linux" onclick="selectOs(this, 'linux')">
-              <div class="os-card-icon">🐧</div>
-              <div class="os-card-name">Linux</div>
+          <div class="os-grid">
+            <div class="os-option selected" data-os="linux" onclick="selectWizardOs(this, 'linux')">
+              <div class="os-option-icon">🐧</div>
+              <div class="os-option-name">Linux</div>
             </div>
-            <div class="os-card" data-os="windows" onclick="selectOs(this, 'windows')">
-              <div class="os-card-icon">🪟</div>
-              <div class="os-card-name">Windows</div>
+            <div class="os-option" data-os="windows" onclick="selectWizardOs(this, 'windows')">
+              <div class="os-option-icon">🪟</div>
+              <div class="os-option-name">Windows</div>
             </div>
-            <div class="os-card" data-os="android" onclick="selectOs(this, 'android')">
-              <div class="os-card-icon">🤖</div>
-              <div class="os-card-name">Android</div>
+            <div class="os-option" data-os="android" onclick="selectWizardOs(this, 'android')">
+              <div class="os-option-icon">🤖</div>
+              <div class="os-option-name">Android</div>
             </div>
-            <div class="os-card" data-os="slitaz" onclick="selectOs(this, 'slitaz')">
-              <div class="os-card-icon">⚡</div>
-              <div class="os-card-name">SliTaz (Live)</div>
+            <div class="os-option" data-os="slitaz" onclick="selectWizardOs(this, 'slitaz')">
+              <div class="os-option-icon">⚡</div>
+              <div class="os-option-name">SliTaz</div>
             </div>
           </div>
         </div>
 
         <div class="form-group">
           <label class="form-label">Tên máy ảo</label>
-          <input type="text" class="form-input" id="inputVmName" placeholder="Ví dụ: Ubuntu 24.04 LTS" value="Ubuntu 24.04">
+          <input type="text" class="form-control" id="newVmName" value="Ubuntu 24.04">
         </div>
 
         <div class="form-group">
           <label class="form-label">Tệp ISO cài đặt (Tùy chọn)</label>
-          <input type="text" class="form-input" id="inputVmIso" placeholder="Đường dẫn đến file .iso (vd: D:\Downloads\ubuntu.iso)">
+          <input type="text" class="form-control" id="newVmIso" placeholder="Đường dẫn đến file .iso (vd: C:\Downloads\os.iso)">
+        </div>
+
+        <div class="switch-row">
+          <div class="switch-info">
+            <div class="switch-title">Tối ưu cho máy tính cấu hình yếu</div>
+            <div class="switch-desc">Tự động cấu hình CPU 1 nhân, RAM 512MB, bo mạch pc nhẹ để máy chạy êm.</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="newVmLowSpec" onchange="toggleWizardLowSpec(this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
         </div>
 
         <div class="form-group">
-          <label class="form-label">Số nhân CPU (Cores)</label>
-          <div class="slider-row">
-            <input type="range" id="inputVmCores" min="1" max="16" value="2" oninput="updateSliders()">
-            <div class="slider-val" id="valVmCores">2 Cores</div>
-          </div>
+          <label class="form-label">Số nhân CPU: <span id="lblNewCores" style="color: var(--primary);">2 Cores</span></label>
+          <input type="range" id="newVmCores" min="1" max="8" value="2" oninput="document.getElementById('lblNewCores').innerText = this.value + ' Cores'">
         </div>
 
         <div class="form-group">
-          <label class="form-label">Bộ nhớ RAM (MB)</label>
-          <div class="slider-row">
-            <input type="range" id="inputVmRam" min="1024" max="32768" step="1024" value="4096" oninput="updateSliders()">
-            <div class="slider-val" id="valVmRam">4096 MB</div>
-          </div>
+          <label class="form-label">Dung lượng RAM: <span id="lblNewRam" style="color: var(--primary);">2048 MB</span></label>
+          <input type="range" id="newVmRam" min="256" max="16384" step="256" value="2048" oninput="document.getElementById('lblNewRam').innerText = this.value + ' MB'">
         </div>
 
         <div class="form-group">
-          <label class="form-label">Kích thước ổ đĩa (GB)</label>
-          <div class="slider-row">
-            <input type="range" id="inputVmDisk" min="10" max="256" step="5" value="32" oninput="updateSliders()">
-            <div class="slider-val" id="valVmDisk">32 GB</div>
-          </div>
+          <label class="form-label">Dung lượng ổ đĩa ảo (GB): <span id="lblNewDisk" style="color: var(--primary);">32 GB</span></label>
+          <input type="range" id="newVmDisk" min="4" max="256" step="4" value="32" oninput="document.getElementById('lblNewDisk').innerText = this.value + ' GB'">
         </div>
       </div>
 
       <div class="modal-footer">
-        <button class="btn-action" id="btnCancelWizard">Hủy</button>
-        <button class="btn-action btn-start" id="btnCreateVmConfirm">Khởi tạo máy ảo</button>
+        <button class="btn-action" onclick="closeWizard()">Hủy</button>
+        <button class="btn-action btn-start" onclick="submitCreateVm()">✨ Tạo máy ảo</button>
       </div>
     </div>
   </div>
 
+  <!-- Process Monitor Modal -->
+  <div class="modal-overlay" id="procModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">⚡ Giám sát tiến trình chạy ngầm</div>
+        <button class="modal-close" onclick="closeProcModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 13px; color: var(--text-sub);">
+          AeroVM tự động gộp và chạy ngầm toàn bộ tiến trình điều khiển QEMU mà không tạo bất kỳ cửa sổ console đen nào trên Desktop.
+        </p>
+        <div id="procList" style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px;">
+          <!-- Process items -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-action btn-stop" onclick="stopAllProcesses()">🛑 Dừng tất cả tiến trình ngầm</button>
+        <button class="btn-action" onclick="closeProcModal()">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
   <script>
     let vms = [];
-    let selectedVmId = null;
-    let selectedOsType = 'linux';
+    let currentVmId = null;
+    let selectedWizardOs = 'linux';
 
-    async function loadVms() {
+    function showToast(msg, icon = 'ℹ️') {
+      const container = document.getElementById('toastContainer');
+      const t = document.createElement('div');
+      t.className = 'toast';
+      t.innerHTML = `<span>${icon}</span> <span>${msg}</span>`;
+      container.appendChild(t);
+      setTimeout(() => {
+        t.style.opacity = '0';
+        t.style.transition = 'opacity 0.3s';
+        setTimeout(() => t.remove(), 300);
+      }, 3500);
+    }
+
+    async function fetchVms() {
       try {
         const res = await fetch('/api/vms');
         vms = await res.json();
         renderSidebar();
-        if (selectedVmId) {
-          const current = vms.find(v => v.id === selectedVmId);
-          if (current) renderDetails(current);
-          else resetView();
-        } else if (vms.length > 0) {
-          selectVm(vms[0].id);
-        } else {
-          resetView();
+        if (currentVmId) {
+          const found = vms.find(v => v.id === currentVmId);
+          if (found) selectVm(found.id);
         }
       } catch (e) {
-        console.error('Lỗi nạp danh sách VM:', e);
+        console.error("Lỗi fetch VMs:", e);
       }
     }
 
     function renderSidebar() {
-      const container = document.getElementById('vmListContainer');
-      container.innerHTML = '';
+      const c = document.getElementById('vmListContainer');
+      c.innerHTML = '';
+      if (!vms.length) {
+        c.innerHTML = '<div style="padding: 20px; font-size: 12.5px; color: var(--text-muted); text-align: center;">Chưa có máy ảo nào</div>';
+        return;
+      }
+
       vms.forEach(vm => {
         const item = document.createElement('div');
-        item.className = `vm-item ${vm.id === selectedVmId ? 'active' : ''}`;
+        item.className = 'vm-item' + (vm.id === currentVmId ? ' active' : '');
         item.onclick = () => selectVm(vm.id);
 
         let icon = '🐧';
         if (vm.os_type === 'windows') icon = '🪟';
-        if (vm.os_type === 'android') icon = '🤖';
-        if (vm.os_type === 'slitaz' || (vm.name && vm.name.toLowerCase().includes('slitaz'))) icon = '⚡';
+        else if (vm.os_type === 'android') icon = '🤖';
+        else if (vm.os_type === 'slitaz') icon = '⚡';
+
+        const accelClass = vm.accel === 'whpx' ? 'whpx' : 'tcg';
+        const accelText = vm.accel === 'whpx' ? 'WHPX' : 'TCG';
 
         item.innerHTML = `
           <div class="vm-os-icon">${icon}</div>
           <div class="vm-info">
-            <div class="vm-name">${esc(vm.name)}</div>
-            <div class="vm-meta">${vm.cpu_cores} Cores · ${vm.memory_mb} MB · ${vm.disk_size_gb} GB</div>
+            <div class="vm-name">${vm.name}</div>
+            <div class="vm-meta">
+              <span class="badge-accel ${accelClass}">${accelText}</span>
+              <span>${vm.cpu_cores}C · ${vm.memory_mb}M</span>
+            </div>
           </div>
-          <div class="status-dot ${vm.running ? 'running' : ''}"></div>
+          <div class="status-dot ${vm.running ? 'running' : ''}" title="${vm.running ? 'Đang chạy' : 'Đã tắt'}"></div>
         `;
-        container.appendChild(item);
+        c.appendChild(item);
       });
     }
 
     function selectVm(id) {
-      selectedVmId = id;
+      currentVmId = id;
       renderSidebar();
       const vm = vms.find(v => v.id === id);
-      if (vm) renderDetails(vm);
-    }
+      if (!vm) return;
 
-    function renderDetails(vm) {
       document.getElementById('emptyStateView').style.display = 'none';
       document.getElementById('topToolbar').style.display = 'flex';
-      document.getElementById('vmDetailsBody').style.display = 'flex';
+      document.getElementById('navTabs').style.display = 'flex';
+      document.getElementById('workspaceContent').style.display = 'block';
 
-      document.getElementById('vmTitle').textContent = vm.name;
-      const statusBadge = document.getElementById('vmStatusBadge');
+      // Toolbar Header
+      document.getElementById('vmTitle').innerText = vm.name;
+      const badge = document.getElementById('vmStatusBadge');
       const btnStart = document.getElementById('btnStartVm');
       const btnStop = document.getElementById('btnStopVm');
 
       if (vm.running) {
-        statusBadge.textContent = 'Đang chạy';
-        statusBadge.className = 'badge-status running';
+        badge.className = 'badge-status running';
+        badge.innerText = 'Đang chạy';
         btnStart.style.display = 'none';
         btnStop.style.display = 'flex';
       } else {
-        statusBadge.textContent = 'Đã tắt';
-        statusBadge.className = 'badge-status';
+        badge.className = 'badge-status';
+        badge.innerText = 'Đã dừng';
         btnStart.style.display = 'flex';
         btnStop.style.display = 'none';
       }
 
-      document.getElementById('specCpuRam').textContent = `${vm.cpu_cores} Nhân · ${vm.memory_mb} MB RAM`;
-      document.getElementById('specDisk').textContent = `${vm.disk_size_gb} GB QCOW2`;
-      const specIso = document.getElementById('specIso');
-      if (vm.iso_path) {
-        specIso.innerHTML = `<span style="color:#58a6ff;">${esc(vm.iso_path)}</span>`;
+      // Populate Overview Tab
+      const isWhpx = vm.accel === 'whpx';
+      document.getElementById('specAccel').innerText = isWhpx ? '⚡ WHPX Hardware' : '🔄 TCG Emulation';
+      document.getElementById('specAccelDesc').innerText = isWhpx
+        ? 'Tận dụng công nghệ ảo hóa phần cứng Intel VT-x / AMD-V tốc độ tối đa.'
+        : 'Mô phỏng phần mềm tương thích 100%, bảo đảm không lỗi ngắt cho SliTaz và Linux cổ.';
+
+      document.getElementById('specCpuRam').innerText = `${vm.cpu_cores} Nhân · ${vm.memory_mb} MB RAM`;
+      document.getElementById('specCpuRamDesc').innerText = vm.low_spec_mode
+        ? 'Chế độ máy cấu hình yếu đang BẬT: Đã tối ưu hóa CPU và RAM an toàn.'
+        : 'Cấp phát chuẩn cho hiệu năng tốt.';
+
+      document.getElementById('specDisk').innerText = `${vm.disk_size_gb} GB QCOW2`;
+      document.getElementById('specIso').innerText = vm.iso_path ? vm.iso_path : 'Chưa gắn tệp ISO';
+      document.getElementById('specFolder').innerText = vm.folder_path || '~/.aerovm/vms/' + vm.id;
+
+      // Populate Settings Tab
+      populateSettingsForm(vm);
+
+      // Load Logs if active
+      if (document.getElementById('pane-logs').classList.contains('active')) {
+        loadLogs();
+      }
+    }
+
+    function populateSettingsForm(vm) {
+      document.getElementById('cfgName').value = vm.name;
+      document.getElementById('cfgCores').value = vm.cpu_cores;
+      document.getElementById('cfgRam').value = vm.memory_mb;
+      document.getElementById('cfgMachine').value = vm.machine_type || 'pc';
+      document.getElementById('cfgVga').value = vm.vga_card || 'std';
+      document.getElementById('cfgLowSpec').checked = !!vm.low_spec_mode;
+      document.getElementById('cfgSound').checked = vm.sound_enabled !== false;
+      document.getElementById('cfgIso').value = vm.iso_path || '';
+
+      setSettingEngine(vm.accel || 'whpx', false);
+      updateSettingSliders();
+    }
+
+    let activeEngine = 'whpx';
+    function setSettingEngine(mode, markDirty = true) {
+      activeEngine = mode;
+      const btnWhpx = document.getElementById('btnEngineWhpx');
+      const btnTcg = document.getElementById('btnEngineTcg');
+      const note = document.getElementById('engineNote');
+
+      if (mode === 'whpx') {
+        btnWhpx.className = 'segment-btn active';
+        btnTcg.className = 'segment-btn tcg';
+        note.innerHTML = '* <b>WHPX</b>: Tăng tốc phần cứng cho Ubuntu, Windows, Android. (Cần Intel VT-x/AMD-V bật trong BIOS)';
       } else {
-        specIso.innerHTML = `<span style="color:#d29922;">⚠️ Chưa gắn ISO</span> <span style="font-size:12px;color:var(--text-sub);">(Cần ISO để khởi động)</span>`;
-      }
-
-      const specAccel = document.getElementById('specAccel');
-      const accelDesc = document.getElementById('accelDesc');
-      const btnToggleAccel = document.getElementById('btnToggleAccel');
-      if (vm.accel === 'tcg') {
-        specAccel.innerHTML = `<span style="color:#e3b341;">🐢 TCG (Mô phỏng tương thích)</span>`;
-        accelDesc.textContent = 'Mô phỏng đa luồng: tương thích 100% cho SliTaz, Linux cũ, DOS...';
-        btnToggleAccel.textContent = '⚡ Chuyển sang WHPX (Tăng tốc)';
-      } else {
-        specAccel.innerHTML = `<span style="color:#3fb950;">⚡ WHPX (Tăng tốc phần cứng)</span>`;
-        accelDesc.textContent = 'Khai thác Intel VT-x / AMD-V tốc độ tối đa (Windows 11, Ubuntu).';
-        btnToggleAccel.textContent = '🔄 Chuyển sang TCG (Mô phỏng)';
+        btnWhpx.className = 'segment-btn';
+        btnTcg.className = 'segment-btn active tcg';
+        note.innerHTML = '* <b>TCG</b>: Mô phỏng tương thích 100%. Khuyên dùng tuyệt đối cho <b>SliTaz Live</b> và Linux cổ.';
       }
     }
 
-    function resetView() {
-      selectedVmId = null;
-      document.getElementById('emptyStateView').style.display = 'flex';
-      document.getElementById('topToolbar').style.display = 'none';
-      document.getElementById('vmDetailsBody').style.display = 'none';
+    function updateSettingSliders() {
+      const cores = document.getElementById('cfgCores').value;
+      const ram = document.getElementById('cfgRam').value;
+      document.getElementById('badgeCores').innerText = cores + ' Cores';
+      document.getElementById('badgeRam').innerText = ram + ' MB';
     }
 
-    function esc(s) {
-      return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    function switchTab(tabId) {
+      document.querySelectorAll('.nav-tab').forEach(t => {
+        t.classList.toggle('active', t.getAttribute('data-tab') === tabId);
+      });
+      document.querySelectorAll('.tab-pane').forEach(p => {
+        p.classList.toggle('active', p.id === 'pane-' + tabId);
+      });
+      if (tabId === 'logs') loadLogs();
     }
 
-    function selectOs(el, type) {
-      document.querySelectorAll('.os-card').forEach(c => c.classList.remove('selected'));
-      el.classList.add('selected');
-      selectedOsType = type;
-
-      const nameInput = document.getElementById('inputVmName');
-      const ramSlider = document.getElementById('inputVmRam');
-      const diskSlider = document.getElementById('inputVmDisk');
-
-      if (type === 'windows') {
-        nameInput.value = 'Windows 11';
-        ramSlider.value = 8192;
-        diskSlider.value = 64;
-      } else if (type === 'android') {
-        nameInput.value = 'Android-x86';
-        ramSlider.value = 4096;
-        diskSlider.value = 16;
-      } else if (type === 'slitaz') {
-        nameInput.value = 'SliTaz GNU/Linux (Live)';
-        ramSlider.value = 1024;
-        diskSlider.value = 4;
-        const isoInput = document.getElementById('inputVmIso');
-        if (!isoInput.value) {
-          isoInput.value = 'C:\\Users\\th100\\.aerovm\\isos\\slitaz-core64.iso';
-        }
-      } else {
-        nameInput.value = 'Ubuntu 24.04';
-        ramSlider.value = 4096;
-        diskSlider.value = 32;
+    async function saveVmSettings() {
+      if (!currentVmId) return;
+      const vm = vms.find(v => v.id === currentVmId);
+      if (vm && vm.running) {
+        showToast('Máy ảo đang chạy! Vui lòng dừng máy ảo trước khi đổi cài đặt.', '⚠️');
+        return;
       }
-      updateSliders();
-    }
-
-    async function promptSetIso() {
-      if (!selectedVmId) return;
-      const vm = vms.find(v => v.id === selectedVmId);
-      const current = (vm && vm.iso_path) ? vm.iso_path : '';
-      const newIso = prompt('Nhập đường dẫn đầy đủ đến tệp .ISO:\n(Ví dụ: C:\\Users\\th100\\.aerovm\\isos\\slitaz-core64.iso hoặc để trống để gỡ ISO)', current);
-      if (newIso === null) return;
-      try {
-        const res = await fetch('/api/vms/set_iso', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: selectedVmId, iso: newIso.trim() ? newIso.trim() : null })
-        });
-        const data = await res.json();
-        if (data.ok) {
-          await loadVms();
-          selectVm(selectedVmId);
-        } else {
-          alert('Lỗi: ' + (data.error || 'Không thể cập nhật ISO'));
-        }
-      } catch (e) {
-        alert('Lỗi kết nối: ' + e);
-      }
-    }
-
-    async function toggleAccel() {
-      if (!selectedVmId) return;
-      const vm = vms.find(v => v.id === selectedVmId);
-      if (!vm) return;
-      const newAccel = vm.accel === 'whpx' ? 'tcg' : 'whpx';
-      try {
-        const res = await fetch('/api/vms/set_accel', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: selectedVmId, accel: newAccel })
-        });
-        const data = await res.json();
-        if (data.ok) {
-          await loadVms();
-          selectVm(selectedVmId);
-        } else {
-          alert('Lỗi: ' + data.error);
-        }
-      } catch (e) {
-        alert('Lỗi kết nối: ' + e);
-      }
-    }
-
-    function updateSliders() {
-      document.getElementById('valVmCores').textContent = document.getElementById('inputVmCores').value + ' Cores';
-      document.getElementById('valVmRam').textContent = document.getElementById('inputVmRam').value + ' MB';
-      document.getElementById('valVmDisk').textContent = document.getElementById('inputVmDisk').value + ' GB';
-    }
-
-    // Buttons
-    document.getElementById('btnStartVm').onclick = async () => {
-      if (!selectedVmId) return;
-      try {
-        const res = await fetch(`/api/vms/${selectedVmId}/start`, { method: 'POST' });
-        const data = await res.json();
-        if (!data.ok) alert('Lỗi: ' + data.error);
-        await loadVms();
-      } catch (e) { alert('Lỗi: ' + e); }
-    };
-
-    document.getElementById('btnStopVm').onclick = async () => {
-      if (!selectedVmId) return;
-      try {
-        const res = await fetch(`/api/vms/${selectedVmId}/stop`, { method: 'POST' });
-        await loadVms();
-      } catch (e) { alert('Lỗi: ' + e); }
-    };
-
-    document.getElementById('btnDeleteVm').onclick = async () => {
-      if (!selectedVmId || !confirm('Bạn có chắc muốn xóa máy ảo này và toàn bộ dữ liệu ổ đĩa không?')) return;
-      try {
-        await fetch(`/api/vms/${selectedVmId}`, { method: 'DELETE' });
-        selectedVmId = null;
-        await loadVms();
-      } catch (e) { alert('Lỗi: ' + e); }
-    };
-
-    // Modal
-    const modal = document.getElementById('wizardModal');
-    document.getElementById('btnOpenNewModal').onclick = () => { modal.classList.add('open'); };
-    document.getElementById('btnCloseWizard').onclick = () => { modal.classList.remove('open'); };
-    document.getElementById('btnCancelWizard').onclick = () => { modal.classList.remove('open'); };
-
-    document.getElementById('btnCreateVmConfirm').onclick = async () => {
-      const name = document.getElementById('inputVmName').value.trim();
-      if (!name) return alert('Vui lòng nhập tên máy ảo');
-
-      const iso = document.getElementById('inputVmIso').value.trim();
-      const cpu = parseInt(document.getElementById('inputVmCores').value, 10);
-      const ram = parseInt(document.getElementById('inputVmRam').value, 10);
-      const disk = parseInt(document.getElementById('inputVmDisk').value, 10);
 
       const payload = {
-        name,
-        os_type: selectedOsType,
-        iso: iso.length > 0 ? iso : null,
-        cpu_cores: cpu,
-        memory_mb: ram,
-        disk_size_gb: disk
+        name: document.getElementById('cfgName').value.trim() || 'AeroVM Guest',
+        cpu_cores: parseInt(document.getElementById('cfgCores').value) || 2,
+        memory_mb: parseInt(document.getElementById('cfgRam').value) || 2048,
+        accel: activeEngine,
+        machine_type: document.getElementById('cfgMachine').value,
+        vga_card: document.getElementById('cfgVga').value,
+        low_spec_mode: document.getElementById('cfgLowSpec').checked,
+        sound_enabled: document.getElementById('cfgSound').checked,
+        iso_path: document.getElementById('cfgIso').value.trim() || null
+      };
+
+      try {
+        const res = await fetch(`/api/vms/${currentVmId}/update`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.ok) {
+          showToast('Đã lưu thành công cấu hình máy ảo!', '✅');
+          await fetchVms();
+        } else {
+          showToast('Lỗi lưu cấu hình: ' + data.error, '❌');
+        }
+      } catch (e) {
+        showToast('Lỗi kết nối máy chủ: ' + e.message, '❌');
+      }
+    }
+
+    function resetSettings() {
+      const vm = vms.find(v => v.id === currentVmId);
+      if (vm) populateSettingsForm(vm);
+      showToast('Đã khôi phục thông số ban đầu', '🔄');
+    }
+
+    async function startCurrentVm() {
+      if (!currentVmId) return;
+      showToast('Đang khởi động máy ảo qua Native SDL...', '🚀');
+      try {
+        const res = await fetch(`/api/vms/${currentVmId}/start`, { method: 'POST' });
+        const data = await res.json();
+        if (data.ok) {
+          showToast('Máy ảo đã khởi động thành công!', '✅');
+          await fetchVms();
+        } else {
+          showToast('Lỗi khởi động: ' + data.error, '❌');
+        }
+      } catch (e) {
+        showToast('Lỗi khởi động: ' + e.message, '❌');
+      }
+    }
+
+    async function stopCurrentVm() {
+      if (!currentVmId) return;
+      showToast('Đang tắt máy ảo...', '⏹');
+      try {
+        const res = await fetch(`/api/vms/${currentVmId}/stop`, { method: 'POST' });
+        const data = await res.json();
+        if (data.ok) {
+          showToast('Máy ảo đã dừng an toàn.', 'ℹ️');
+          await fetchVms();
+        } else {
+          showToast('Lỗi dừng máy ảo: ' + data.error, '❌');
+        }
+      } catch (e) {
+        showToast('Lỗi dừng: ' + e.message, '❌');
+      }
+    }
+
+    async function openVmFolder() {
+      if (!currentVmId) return;
+      try {
+        await fetch(`/api/vms/${currentVmId}/open_folder`, { method: 'POST' });
+        showToast('Đã mở thư mục máy ảo trong Windows Explorer', '📂');
+      } catch (e) {
+        showToast('Không thể mở thư mục: ' + e.message, '❌');
+      }
+    }
+
+    async function deleteCurrentVm() {
+      if (!currentVmId) return;
+      if (!confirm('Bạn có chắc chắn muốn xóa máy ảo này cùng toàn bộ ổ đĩa ảo không?')) return;
+      try {
+        const res = await fetch(`/api/vms/${currentVmId}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.ok) {
+          showToast('Đã xóa máy ảo thành công.', '🗑️');
+          currentVmId = null;
+          document.getElementById('topToolbar').style.display = 'none';
+          document.getElementById('navTabs').style.display = 'none';
+          document.getElementById('workspaceContent').style.display = 'none';
+          document.getElementById('emptyStateView').style.display = 'flex';
+          await fetchVms();
+        } else {
+          showToast('Lỗi xóa máy ảo: ' + data.error, '❌');
+        }
+      } catch (e) {
+        showToast('Lỗi xóa: ' + e.message, '❌');
+      }
+    }
+
+    async function loadLogs() {
+      if (!currentVmId) return;
+      try {
+        const res = await fetch(`/api/vms/${currentVmId}/logs`);
+        const data = await res.json();
+        const box = document.getElementById('logContent');
+        box.innerText = data.logs || 'Chưa có nhật ký hoạt động.';
+        box.scrollTop = box.scrollHeight;
+      } catch (e) {
+        document.getElementById('logContent').innerText = 'Không thể nạp nhật ký: ' + e.message;
+      }
+    }
+
+    // Process Monitor Modal
+    async function showProcModal() {
+      document.getElementById('procModal').classList.add('open');
+      try {
+        const res = await fetch('/api/processes');
+        const data = await res.json();
+        const list = document.getElementById('procList');
+        list.innerHTML = '';
+        if (!data.processes || !data.processes.length) {
+          list.innerHTML = '<div style="font-size: 13px; color: var(--text-muted); padding: 12px; text-align: center;">Hiện không có tiến trình QEMU nào đang chạy ngầm.</div>';
+          return;
+        }
+        data.processes.forEach(p => {
+          const row = document.createElement('div');
+          row.style.cssText = 'display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.3); padding:10px 14px; border-radius:8px; border:1px solid var(--card-border);';
+          row.innerHTML = `
+            <div>
+              <div style="font-size: 13.5px; font-weight: 600;">${p.name}</div>
+              <div style="font-size: 11.5px; color: var(--text-sub);">PID: ${p.pid} · ${p.status}</div>
+            </div>
+            <button class="btn-action btn-stop" style="height:28px; font-size:11px;" onclick="stopProc('${p.id}')">Dừng</button>
+          `;
+          list.appendChild(row);
+        });
+      } catch (e) {
+        console.error("Lỗi lấy tiến trình:", e);
+      }
+    }
+
+    function closeProcModal() {
+      document.getElementById('procModal').classList.remove('open');
+    }
+
+    async function stopProc(id) {
+      try {
+        await fetch(`/api/vms/${id}/stop`, { method: 'POST' });
+        showToast('Đã dừng tiến trình máy ảo', '⏹');
+        showProcModal();
+        fetchVms();
+      } catch (e) {}
+    }
+
+    async function stopAllProcesses() {
+      try {
+        await fetch('/api/processes/stop_all', { method: 'POST' });
+        showToast('Đã dừng tất cả tiến trình QEMU ngầm', '🛑');
+        showProcModal();
+        fetchVms();
+      } catch (e) {}
+    }
+
+    // Wizard Create VM
+    document.getElementById('btnOpenNewModal').onclick = () => {
+      document.getElementById('wizardModal').classList.add('open');
+    };
+    function closeWizard() {
+      document.getElementById('wizardModal').classList.remove('open');
+    }
+
+    function selectWizardOs(el, os) {
+      document.querySelectorAll('.os-option').forEach(o => o.classList.remove('selected'));
+      el.classList.add('selected');
+      selectedWizardOs = os;
+
+      const nameInput = document.getElementById('newVmName');
+      const ramSlider = document.getElementById('newVmRam');
+      const coreSlider = document.getElementById('newVmCores');
+      const diskSlider = document.getElementById('newVmDisk');
+      const lowSpec = document.getElementById('newVmLowSpec');
+
+      if (os === 'windows') {
+        nameInput.value = 'Windows 11 Pro';
+        coreSlider.value = 4;
+        ramSlider.value = 4096;
+        diskSlider.value = 64;
+        lowSpec.checked = false;
+      } else if (os === 'android') {
+        nameInput.value = 'Android-x86';
+        coreSlider.value = 2;
+        ramSlider.value = 2048;
+        diskSlider.value = 16;
+        lowSpec.checked = false;
+      } else if (os === 'slitaz') {
+        nameInput.value = 'SliTaz GNU/Linux (Live)';
+        coreSlider.value = 1;
+        ramSlider.value = 512;
+        diskSlider.value = 4;
+        lowSpec.checked = true;
+      } else {
+        nameInput.value = 'Ubuntu 24.04 LTS';
+        coreSlider.value = 2;
+        ramSlider.value = 2048;
+        diskSlider.value = 32;
+        lowSpec.checked = false;
+      }
+
+      document.getElementById('lblNewCores').innerText = coreSlider.value + ' Cores';
+      document.getElementById('lblNewRam').innerText = ramSlider.value + ' MB';
+      document.getElementById('lblNewDisk').innerText = diskSlider.value + ' GB';
+    }
+
+    function toggleWizardLowSpec(checked) {
+      if (checked) {
+        document.getElementById('newVmCores').value = 1;
+        document.getElementById('newVmRam').value = 512;
+        document.getElementById('lblNewCores').innerText = '1 Cores';
+        document.getElementById('lblNewRam').innerText = '512 MB';
+      }
+    }
+
+    async function submitCreateVm() {
+      const payload = {
+        name: document.getElementById('newVmName').value.trim() || 'AeroVM Guest',
+        os_type: selectedWizardOs,
+        iso: document.getElementById('newVmIso').value.trim() || null,
+        cpu_cores: parseInt(document.getElementById('newVmCores').value) || 2,
+        memory_mb: parseInt(document.getElementById('newVmRam').value) || 2048,
+        disk_size_gb: parseInt(document.getElementById('newVmDisk').value) || 32,
+        low_spec_mode: document.getElementById('newVmLowSpec').checked
       };
 
       try {
@@ -544,18 +1475,28 @@
         });
         const data = await res.json();
         if (data.ok) {
-          modal.classList.remove('open');
-          await loadVms();
+          closeWizard();
+          showToast('Đã tạo máy ảo mới thành công!', '🎉');
+          await fetchVms();
           selectVm(data.vm.id);
         } else {
-          alert('Lỗi tạo máy ảo: ' + data.error);
+          showToast('Lỗi tạo máy ảo: ' + data.error, '❌');
         }
-      } catch (e) { alert('Lỗi kết nối: ' + e); }
-    };
+      } catch (e) {
+        showToast('Lỗi kết nối: ' + e.message, '❌');
+      }
+    }
 
-    // Polling status
-    setInterval(loadVms, 2500);
-    loadVms();
+    async function exitApp() {
+      if (confirm('Bạn có muốn đóng AeroVM và tắt tất cả máy ảo đang chạy không?')) {
+        await fetch('/api/app/exit', { method: 'POST' });
+        window.close();
+      }
+    }
+
+    // Polling refresh every 3 seconds
+    fetchVms();
+    setInterval(fetchVms, 3000);
   </script>
 </body>
 </html>

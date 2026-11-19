@@ -1,3 +1,5 @@
+#![windows_subsystem = "windows"]
+
 mod config;
 mod manager;
 mod qemu;
@@ -8,6 +10,9 @@ use manager::VmManager;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::Arc;
+
+#[cfg(windows)]
+use std::os::windows::process::CommandExt;
 
 fn open_browser_window(url: &str) {
     let local_app_data = std::env::var("LOCALAPPDATA").unwrap_or_default();
@@ -26,55 +31,89 @@ fn open_browser_window(url: &str) {
 
     for path in &candidates {
         if !path.is_empty() && Path::new(path).exists() {
-            let res = Command::new(path)
-                .arg(format!("--app={}", url))
-                .arg("--window-size=1200,800")
-                .spawn();
-            if res.is_ok() {
+            let mut cmd = Command::new(path);
+            cmd.arg(format!("--app={}", url))
+               .arg("--window-size=1240,840");
+
+            #[cfg(windows)]
+            cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
+
+            if let Ok(mut child) = cmd.spawn() {
+                // Khi người dùng tắt cửa sổ ứng dụng, tự động kết thúc tiến trình chạy ngầm
+                std::thread::spawn(move || {
+                    let _ = child.wait();
+                    std::process::exit(0);
+                });
                 return;
             }
         }
     }
 
     // Fallback 1: rundll32
-    if Command::new("rundll32.exe")
-        .args(["url.dll,FileProtocolHandler", url])
-        .spawn()
-        .is_ok()
-    {
+    let mut cmd1 = Command::new("rundll32.exe");
+    cmd1.args(["url.dll,FileProtocolHandler", url]);
+    #[cfg(windows)]
+    cmd1.creation_flags(0x08000000);
+    if cmd1.spawn().is_ok() {
         return;
     }
 
     // Fallback 2: cmd start
-    let _ = Command::new("cmd.exe")
-        .args(["/c", "start", "", url])
-        .spawn();
+    let mut cmd2 = Command::new("cmd.exe");
+    cmd2.args(["/c", "start", "", url]);
+    #[cfg(windows)]
+    cmd2.creation_flags(0x08000000);
+    let _ = cmd2.spawn();
 }
 
-fn main() {
-    println!("============================================================");
-    println!("     🚀 AeroVM - Trình Quản Lý Máy Ảo Phong Cách UTM       ");
-    println!("     100% Rust Backend · Tăng Tốc WHPX Hardware Acceleration");
-    println!("============================================================");
+fn resolve_aerovm_dir() -> PathBuf {
+    // 1. Kiểm tra biến môi trường
+    if let Ok(val) = std::env::var("AEROVM_HOME") {
+        let p = PathBuf::from(val);
+        if p.exists() {
+            return p;
+        }
+    }
 
+    // 2. Kiểm tra cạnh file thực thi (nếu chạy trong thư mục cài đặt riêng C:\Users\...\AeroVM)
+    if let Ok(exe_path) = std::env::current_exe() {
+        if let Some(exe_dir) = exe_path.parent() {
+            // Trường hợp 1: exe nằm trong thư mục gốc cài đặt
+            if exe_dir.join("qemu").exists() || exe_dir.join("vms").exists() {
+                return exe_dir.to_path_buf();
+            }
+            // Trường hợp 2: exe nằm trong thư mục bin/ (vd: AeroVM/bin/aerovm.exe)
+            if let Some(parent) = exe_dir.parent() {
+                if parent.join("qemu").exists() || parent.join("vms").exists() {
+                    return parent.to_path_buf();
+                }
+            }
+        }
+    }
+
+    // 3. Mặc định tại ~/.aerovm
     let home = std::env::var("USERPROFILE")
         .map(PathBuf::from)
         .unwrap_or_else(|_| PathBuf::from("C:\\Users\\Default"));
 
-    let aerovm_dir = home.join(".aerovm");
+    home.join(".aerovm")
+}
+
+fn main() {
+    let aerovm_dir = resolve_aerovm_dir();
     let vms_dir = aerovm_dir.join("vms");
     let qemu_dir = aerovm_dir.join("qemu");
 
-    println!("[*] Thư mục lưu máy ảo: {:?}", vms_dir);
-    println!("[*] Thư mục QEMU: {:?}", qemu_dir);
+    let _ = std::fs::create_dir_all(&vms_dir);
+    let _ = std::fs::create_dir_all(&qemu_dir);
+    let _ = std::fs::create_dir_all(aerovm_dir.join("isos"));
 
     let manager = Arc::new(VmManager::new(vms_dir.clone(), qemu_dir.clone()));
 
-    // Tự động kiểm tra và khởi tạo máy ảo SliTaz GNU/Linux Live nếu có ISO
+    // Tự động kiểm tra và khởi tạo máy ảo mẫu SliTaz GNU/Linux Live nếu có ISO
     let slitaz_iso = aerovm_dir.join("isos").join("slitaz-core64.iso");
     let has_slitaz = manager.list_vms().iter().any(|v| v.name.to_lowercase().contains("slitaz"));
     if !has_slitaz && slitaz_iso.exists() {
-        println!("[*] Phát hiện SliTaz Live ISO! Đang khởi tạo máy ảo SliTaz GNU/Linux...");
         let template = VmConfig::new_template(
             "SliTaz GNU/Linux (Live)",
             "slitaz",
@@ -82,7 +121,6 @@ fn main() {
         );
         let _ = manager.create_vm(template);
     } else if manager.list_vms().is_empty() {
-        println!("[*] Đang khởi tạo máy ảo mẫu Ubuntu 24.04 LTS...");
         let template = VmConfig::new_template("Ubuntu 24.04 LTS", "linux", None);
         let _ = manager.create_vm(template);
     }
@@ -91,9 +129,6 @@ fn main() {
 
     ui::run_server(manager, default_port, |port| {
         let url = format!("http://127.0.0.1:{}", port);
-        println!("[*] Đang mở giao diện AeroVM UTM Window: {}", url);
         open_browser_window(&url);
-        println!("[*] Giao diện đã sẵn sàng! Bạn có thể sử dụng AeroVM trên cửa sổ vừa mở.");
-        println!("[*] (Hãy giữ cửa sổ console này chạy để duy trì dịch vụ máy ảo)");
     });
 }
