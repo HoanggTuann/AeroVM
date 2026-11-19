@@ -157,9 +157,12 @@
         <div class="spec-grid">
           <div class="card">
             <div class="card-icon">⚡</div>
-            <div class="card-title">Tăng tốc Phần cứng</div>
+            <div class="card-title">Chế độ vận hành (Engine)</div>
             <div class="card-val" id="specAccel">WHPX (Near-native)</div>
-            <div class="card-desc">Sử dụng Windows Hypervisor Platform tận dụng Intel VT-x / AMD-V tốc độ cao.</div>
+            <div class="card-desc" id="accelDesc">Sử dụng Windows Hypervisor Platform tận dụng Intel VT-x / AMD-V tốc độ cao.</div>
+            <div style="margin-top: 10px;">
+              <button class="btn-action" id="btnToggleAccel" style="height: 30px; font-size: 12px; padding: 0 12px; border-radius: 6px;" onclick="toggleAccel()">🔄 Đổi chế độ</button>
+            </div>
           </div>
 
           <div class="card">
@@ -369,6 +372,19 @@
       } else {
         specIso.innerHTML = `<span style="color:#d29922;">⚠️ Chưa gắn ISO</span> <span style="font-size:12px;color:var(--text-sub);">(Cần ISO để khởi động)</span>`;
       }
+
+      const specAccel = document.getElementById('specAccel');
+      const accelDesc = document.getElementById('accelDesc');
+      const btnToggleAccel = document.getElementById('btnToggleAccel');
+      if (vm.accel === 'tcg') {
+        specAccel.innerHTML = `<span style="color:#e3b341;">🐢 TCG (Mô phỏng tương thích)</span>`;
+        accelDesc.textContent = 'Mô phỏng đa luồng: tương thích 100% cho SliTaz, Linux cũ, DOS...';
+        btnToggleAccel.textContent = '⚡ Chuyển sang WHPX (Tăng tốc)';
+      } else {
+        specAccel.innerHTML = `<span style="color:#3fb950;">⚡ WHPX (Tăng tốc phần cứng)</span>`;
+        accelDesc.textContent = 'Khai thác Intel VT-x / AMD-V tốc độ tối đa (Windows 11, Ubuntu).';
+        btnToggleAccel.textContent = '🔄 Chuyển sang TCG (Mô phỏng)';
+      }
     }
 
     function resetView() {
@@ -433,6 +449,29 @@
           selectVm(selectedVmId);
         } else {
           alert('Lỗi: ' + (data.error || 'Không thể cập nhật ISO'));
+        }
+      } catch (e) {
+        alert('Lỗi kết nối: ' + e);
+      }
+    }
+
+    async function toggleAccel() {
+      if (!selectedVmId) return;
+      const vm = vms.find(v => v.id === selectedVmId);
+      if (!vm) return;
+      const newAccel = vm.accel === 'whpx' ? 'tcg' : 'whpx';
+      try {
+        const res = await fetch('/api/vms/set_accel', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: selectedVmId, accel: newAccel })
+        });
+        const data = await res.json();
+        if (data.ok) {
+          await loadVms();
+          selectVm(selectedVmId);
+        } else {
+          alert('Lỗi: ' + data.error);
         }
       } catch (e) {
         alert('Lỗi kết nối: ' + e);

@@ -11,14 +11,15 @@ impl QemuArgs {
         args.push("-name".to_string());
         args.push(cfg.name.clone());
 
-        // Máy ảo Q35 & Tăng tốc phần cứng WHPX
+        // Máy ảo Q35 & Chế độ tăng tốc (WHPX hoặc TCG)
         args.push("-machine".to_string());
         if cfg.accel == "whpx" {
-            // WHPX trên Windows ổn định nhất với -cpu qemu64 và kernel-irqchip=off
-            args.push("q35,accel=whpx:tcg,kernel-irqchip=off".to_string());
+            // WHPX tăng tốc phần cứng cho Windows 10/11, Ubuntu, Android
+            args.push("q35,accel=whpx:tcg".to_string());
             args.push("-cpu".to_string());
             args.push("qemu64".to_string());
         } else {
+            // TCG mô phỏng: tương thích 100% cho SliTaz, Linux cổ, DOS
             args.push("q35,accel=tcg".to_string());
             args.push("-cpu".to_string());
             args.push("qemu64".to_string());
@@ -43,7 +44,7 @@ impl QemuArgs {
         args.push("-device".to_string());
         args.push("hda-duplex".to_string());
 
-        // Card đồ họa chuẩn VGA (tương thích 100% mọi OS, không bị lỗi 'Display output is not active')
+        // Card đồ họa chuẩn VGA (tương thích 100% mọi OS, hiển thị ngay lập tức)
         args.push("-vga".to_string());
         args.push("std".to_string());
 
@@ -74,15 +75,15 @@ impl QemuArgs {
         args.push("-boot".to_string());
         args.push("order=dcn,menu=on".to_string());
 
-        // Hiển thị giao diện cửa sổ khách
+        // Hiển thị giao diện cửa sổ khách qua SDL (Win32/DirectX native, siêu mượt, không lỗi GTK)
         match cfg.display_type.as_str() {
-            "sdl" => {
-                args.push("-display".to_string());
-                args.push("sdl".to_string());
-            }
-            "gtk" | _ => {
+            "gtk" => {
                 args.push("-display".to_string());
                 args.push("gtk,zoom-to-fit=on".to_string());
+            }
+            "sdl" | _ => {
+                args.push("-display".to_string());
+                args.push("sdl".to_string());
             }
         }
 

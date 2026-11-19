@@ -53,16 +53,22 @@ impl VmConfig {
         let id = generate_id("vm");
         let created_at = current_timestamp_str();
 
-        let (os_variant, cpu_cores, memory_mb, disk_size_gb) = match os_type {
-            "windows" => ("win11", 4, 8192, 64),
-            "android" => ("android-x86", 2, 4096, 16),
-            "slitaz" => ("slitaz", 1, 1024, 4),
-            "linux" | _ => ("ubuntu", 2, 4096, 32),
+        let (os_variant, cpu_cores, memory_mb, disk_size_gb, accel) = match os_type {
+            "windows" => ("win11", 4, 8192, 64, "whpx"),
+            "android" => ("android-x86", 2, 4096, 16, "whpx"),
+            "slitaz" => ("slitaz", 2, 1024, 4, "tcg"),
+            "linux" | _ => ("ubuntu", 2, 4096, 32, "whpx"),
         };
 
-        let drive_id = generate_id("disk");
-        let disk_filename = format!("{}.qcow2", name.to_lowercase().replace(' ', "-"));
+        let safe_name = name
+            .to_lowercase()
+            .replace(' ', "-")
+            .chars()
+            .filter(|c| c.is_alphanumeric() || *c == '-')
+            .collect::<String>();
+        let disk_filename = format!("{}.qcow2", safe_name);
 
+        let drive_id = generate_id("disk");
         let drives = vec![VmDrive {
             id: drive_id,
             path: disk_filename,
@@ -80,11 +86,11 @@ impl VmConfig {
             arch: "x86_64".to_string(),
             cpu_cores,
             memory_mb,
-            accel: "whpx".to_string(),
+            accel: accel.to_string(),
             drives,
             iso_path: iso,
             shared_dir: None,
-            display_type: "gtk".to_string(),
+            display_type: "sdl".to_string(),
             qmp_port: 0,
             created_at,
             notes: format!("Tạo bởi AeroVM"),

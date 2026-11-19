@@ -30,6 +30,12 @@ struct SetIsoRequest {
     iso: Option<String>,
 }
 
+#[derive(Deserialize)]
+struct SetAccelRequest {
+    id: String,
+    accel: String,
+}
+
 pub fn run_server<F>(manager: Arc<VmManager>, base_port: u16, on_ready: F)
 where
     F: FnOnce(u16) + Send + 'static,
@@ -111,6 +117,31 @@ where
                 }
                 Err(err) => {
                     let json = serde_json::json!({ "ok": false, "error": format!("Lỗi dữ liệu: {}", err) }).to_string();
+                    let resp = Response::from_string(json);
+                    let _ = request.respond(resp);
+                    continue;
+                }
+            }
+        }
+
+        if method == "POST" && url == "/api/vms/set_accel" {
+            let mut body = String::new();
+            let _ = request.as_reader().read_to_string(&mut body);
+            match serde_json::from_str::<SetAccelRequest>(&body) {
+                Ok(req) => {
+                    let res = manager.set_vm_accel(&req.id, &req.accel);
+                    let json = match res {
+                        Ok(_) => serde_json::json!({ "ok": true }).to_string(),
+                        Err(e) => serde_json::json!({ "ok": false, "error": e }).to_string(),
+                    };
+                    let resp = Response::from_string(json).with_header(
+                        Header::from_bytes(&b"Content-Type"[..], &b"application/json"[..]).unwrap(),
+                    );
+                    let _ = request.respond(resp);
+                    continue;
+                }
+                Err(e) => {
+                    let json = serde_json::json!({ "ok": false, "error": format!("JSON error: {}", e) }).to_string();
                     let resp = Response::from_string(json);
                     let _ = request.respond(resp);
                     continue;

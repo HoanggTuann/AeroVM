@@ -8,7 +8,8 @@
 
 * 🦀 **100% Rust Backend**: Tốc độ phản hồi tức thì, file thực thi chỉ **~2 MB**, tiêu thụ cực ít RAM (< 15 MB).
 * 🍏 **Giao diện chuẩn phong cách UTM**: Dark glassmorphism, hiệu ứng mờ acrylic mượt mà, sidebar máy ảo trực quan.
-* ⚡ **Tăng tốc phần cứng WHPX**: Tận dụng trực tiếp **Windows Hypervisor Platform** (`-accel whpx`), khai thác triệt để công nghệ ảo hóa CPU (Intel VT-x / AMD-V) cho tốc độ tiệm cận máy thật.
+* ⚡ **Tăng tốc phần cứng WHPX & TCG Mode**: Tận dụng trực tiếp **Windows Hypervisor Platform** (`-accel whpx`), đồng thời hỗ trợ chuyển đổi tức thì sang chế độ **TCG Software Emulation** tương thích 100% với các bản phân phối Linux siêu nhẹ (SliTaz, TinyCore...) không hỗ trợ ngắt WHPX.
+* 🖥️ **Hiển thị trực tiếp SDL mượt mà**: Chuyển đổi sang backend hiển thị SDL (`-display sdl`), khắc phục hoàn toàn lỗi màn hình đen GTK (`Guest has not initialized the display`) trên Windows.
 * 🧙‍♂️ **Wizard tạo máy ảo thông minh**:
   * Hỗ trợ cài đặt nhanh cho **Linux** (Ubuntu, Debian, Arch...), **Windows** (Win 10, Win 11), **Android** (Android-x86, BlissOS).
   * Tùy chỉnh thanh trượt số nhân CPU, dung lượng RAM, kích thước ổ đĩa.

@@ -34,7 +34,7 @@ jobs:
           Copy-Item target/release/aerovm.exe dist/
           Copy-Item run.bat dist/
           Copy-Item README.md dist/
-          Compress-Archive -Path "dist/*" -DestinationPath AeroVM-Windows-x64-v0.1.1.zip -Force
+          Compress-Archive -Path "dist/*" -DestinationPath AeroVM-Windows-x64-v0.1.2.zip -Force
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
@@ -46,17 +46,19 @@ jobs:
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v0.1.1
-          name: "AeroVM v0.1.1 (Windows x64 - Fix WHPX & SliTaz)"
+          tag_name: v0.1.2
+          name: "AeroVM v0.1.2 (Windows x64 - SDL Display & Engine Toggle)"
           body: |
-            ## 🚀 AeroVM v0.1.1 - Bản vá lỗi WHPX & Hỗ trợ SliTaz Linux
+            ## 🚀 AeroVM v0.1.2 - Native SDL Display & Bộ Chuyển Đổi Engine
 
-            ### 🛠️ Các sửa đổi quan trọng:
-            * **Sửa lỗi `WHPX: Unexpected VP exit code 4`**: Chuyển tham số CPU từ `-cpu max` sang `-cpu qemu64` tương thích 100% với Windows Hypervisor Platform mà không bị crash hypervisor.
-            * **Sửa lỗi màn hình đen `Display output is not active`**: Chuyển sang `-vga std` để hiển thị đồ họa BIOS/ISOLINUX/Linux ngay từ giây đầu tiên.
-            * **Tích hợp sẵn mẫu SliTaz GNU/Linux Live**: Đã hỗ trợ chạy trực tiếp các bản Live Linux nhẹ như SliTaz mà không cần cài đặt.
-            * **Tính năng Gắn / Đổi ISO**: Cho phép thêm hoặc đổi file ISO trực tiếp từ giao diện dashboard.
+            ### 🛠️ Các cải tiến cốt lõi:
+            * **Cửa sổ Native SDL Display**: Chuyển toàn bộ hiển thị sang bộ dựng hình **SDL DirectX/Win32 Native**. Khắc phục triệt để tình trạng cửa sổ GTK bị màn hình đen hoặc báo `Guest has not initialized the display (yet)`. Màn hình boot, logo, console và desktop hiển thị tức thì.
+            * **Nút chuyển đổi WHPX ⚡ / TCG 🐢 trực tiếp trên giao diện**:
+              * **⚡ WHPX (Phần cứng)**: Tối ưu cho Windows 10/11, Ubuntu 24.04, Android.
+              * **🐢 TCG (Mô phỏng tương thích)**: Tương thích 100% cho SliTaz, Linux cổ, DOS... không bị lỗi ngắt timer hay MSI injection.
+            * **Mẫu SliTaz GNU/Linux Live**: Mặc định cấu hình sẵn chế độ TCG và SDL, bấm Khởi động là chạy ngay lập tức.
+            * **Sửa lỗi tên máy ảo có ký tự đặc biệt**: Tự động chuẩn hóa tên ổ đĩa ảo tránh lỗi đường dẫn file.
 
-            ### 📦 Tệp đính kèm:
-            * **`AeroVM-Windows-x64-v0.1.1.zip`**: Bao gồm `aerovm.exe`, `run.bat` và hướng dẫn sử dụng.
-          files: AeroVM-Windows-x64-v0.1.1.zip
+            ### 📦 Gói phát hành:
+            * **`AeroVM-Windows-x64-v0.1.2.zip`**: Bao gồm `aerovm.exe`, `run.bat` và hướng dẫn.
+          files: AeroVM-Windows-x64-v0.1.2.zip
