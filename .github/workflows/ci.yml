@@ -28,13 +28,13 @@ jobs:
         run: cargo build --release
 
       - name: Package AeroVM Bundle
-        shell: bash
+        shell: pwsh
         run: |
-          mkdir -p dist
-          cp target/release/aerovm.exe dist/
-          cp run.bat dist/
-          cp README.md dist/
-          tar -a -cf AeroVM-Windows-x64-v0.1.0.zip -C dist aerovm.exe run.bat README.md
+          New-Item -ItemType Directory -Path dist -Force
+          Copy-Item target/release/aerovm.exe dist/
+          Copy-Item run.bat dist/
+          Copy-Item README.md dist/
+          Compress-Archive -Path "dist/*" -DestinationPath AeroVM-Windows-x64-v0.1.0.zip -Force
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
@@ -55,7 +55,7 @@ jobs:
             * **AeroVM-Windows-x64-v0.1.0.zip**: Gồm `aerovm.exe`, `run.bat` và hướng dẫn sử dụng.
 
             ### 💡 Điểm đặc biệt:
-            * File thực thi `aerovm.exe` được viết 100% bằng **Rust thuần**, kích thước siêu nhẹ chỉ **~2.0 MB** (khi nén zip còn **~400 KB**), tiêu tốn cực ít tài nguyên RAM (< 15 MB).
+            * File thực thi `aerovm.exe` được viết 100% bằng **Rust thuần**, kích thước siêu nhẹ chỉ **~2.1 MB** (khi nén zip còn **~760 KB**), tiêu tốn cực ít tài nguyên RAM (< 15 MB).
             * Hỗ trợ tăng tốc phần cứng **Windows Hypervisor Platform (WHPX)** và CPU `max` cho hiệu năng tiệm cận máy thật.
             * Giao diện kính mờ Dark Glassmorphism chuẩn phong cách **UTM (macOS)**.
             * Nhấp đúp vào **`run.bat`** hoặc **`aerovm.exe`** để mở ngay ứng dụng!
