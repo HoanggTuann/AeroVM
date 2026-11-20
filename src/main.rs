@@ -7,68 +7,8 @@ mod ui;
 
 use config::VmConfig;
 use manager::VmManager;
-use std::path::{Path, PathBuf};
-use std::process::Command;
+use std::path::PathBuf;
 use std::sync::Arc;
-
-#[cfg(windows)]
-use std::os::windows::process::CommandExt;
-
-fn open_browser_window(url: &str, aerovm_dir: &Path) {
-    let local_app_data = std::env::var("LOCALAPPDATA").unwrap_or_default();
-    let edge_local = format!("{}\\Microsoft\\Edge\\Application\\msedge.exe", local_app_data);
-    let chrome_local = format!("{}\\Google\\Chrome\\Application\\chrome.exe", local_app_data);
-
-    let candidates = [
-        "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
-        "C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe",
-        edge_local.as_str(),
-        "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-        "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
-        chrome_local.as_str(),
-        "C:\\Program Files\\BraveSoftware\\Brave-Browser\\Application\\brave.exe",
-    ];
-
-    let profile_dir = aerovm_dir.join("app_profile");
-    let _ = std::fs::create_dir_all(&profile_dir);
-    let profile_arg = format!("--user-data-dir={}", profile_dir.to_string_lossy());
-
-    for path in &candidates {
-        if !path.is_empty() && Path::new(path).exists() {
-            let mut cmd = Command::new(path);
-            cmd.arg(format!("--app={}", url))
-               .arg(&profile_arg)
-               .arg("--window-size=1260,860")
-               .arg("--no-first-run")
-               .arg("--no-default-browser-check")
-               .arg("--disable-extensions")
-               .arg("--disable-features=Translate,OptimizationHints,MediaRouter");
-
-            #[cfg(windows)]
-            cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
-
-            if cmd.spawn().is_ok() {
-                return;
-            }
-        }
-    }
-
-    // Fallback 1: rundll32
-    let mut cmd1 = Command::new("rundll32.exe");
-    cmd1.args(["url.dll,FileProtocolHandler", url]);
-    #[cfg(windows)]
-    cmd1.creation_flags(0x08000000);
-    if cmd1.spawn().is_ok() {
-        return;
-    }
-
-    // Fallback 2: cmd start
-    let mut cmd2 = Command::new("cmd.exe");
-    cmd2.args(["/c", "start", "", url]);
-    #[cfg(windows)]
-    cmd2.creation_flags(0x08000000);
-    let _ = cmd2.spawn();
-}
 
 fn resolve_aerovm_dir() -> PathBuf {
     // 1. Kiểm tra biến môi trường
@@ -127,11 +67,9 @@ fn main() {
         let _ = manager.create_vm(template);
     }
 
-    let default_port = 45678;
-    let base_dir = aerovm_dir.clone();
-
-    ui::run_server(manager, default_port, move |port| {
-        let url = format!("http://127.0.0.1:{}", port);
-        open_browser_window(&url, &base_dir);
-    });
+    // Chạy ứng dụng giao diện Native Desktop 100% bằng Rust GUI
+    // Không dùng Microsoft Edge, Google Chrome hay web server localhost
+    if let Err(e) = ui::run_native_app(manager) {
+        eprintln!("Lỗi khởi chạy giao diện Native: {:?}", e);
+    }
 }

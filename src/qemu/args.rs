@@ -25,14 +25,20 @@ impl QemuArgs {
         };
 
         args.push("-machine".to_string());
-        if cfg.accel == "whpx" {
-            // WHPX tăng tốc phần cứng
-            args.push(format!("{},accel=whpx:tcg", mach));
+        args.push(mach.to_string());
+
+        if cfg.accel == "whpx" && !cfg.low_spec_mode {
+            // WHPX tăng tốc phần cứng với kernel-irqchip=off chống crash VP exit code 4, fallback TCG
+            args.push("-accel".to_string());
+            args.push("whpx,kernel-irqchip=off".to_string());
+            args.push("-accel".to_string());
+            args.push("tcg".to_string());
             args.push("-cpu".to_string());
-            args.push("qemu64".to_string()); // qemu64 tương thích 100% với WHPX trên Windows, tránh crash CPU host
+            args.push("qemu64".to_string());
         } else {
             // TCG mô phỏng: tương thích 100% không lo lỗi CPU
-            args.push(format!("{},accel=tcg", mach));
+            args.push("-accel".to_string());
+            args.push("tcg".to_string());
             args.push("-cpu".to_string());
             args.push("qemu64".to_string());
         }

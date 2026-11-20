@@ -36,7 +36,7 @@ jobs:
           Copy-Item uninstall.bat dist/
           Copy-Item run.bat dist/
           Copy-Item README.md dist/
-          Compress-Archive -Path "dist/*" -DestinationPath AeroVM-Windows-x64-v0.1.4.zip -Force
+          Compress-Archive -Path "dist/*" -DestinationPath AeroVM-Windows-x64-v0.1.5.zip -Force
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
@@ -48,25 +48,24 @@ jobs:
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v0.1.4
-          name: "AeroVM v0.1.4 (Windows x64 - Hotfix ERR_CONNECTION_REFUSED & Modular CSS Studio)"
+          tag_name: v0.1.5
+          name: "AeroVM v0.1.5 - Pure Native Win32 Desktop App (No Browser, No Web Server, Native GUI)"
           body: |
-            ## 🚀 AeroVM v0.1.4 - Khắc Phục Lỗi Kết Nối & Tách Bộ Giao Diện CSS Độc Lập
+            ## 🚀 AeroVM v0.1.5 - Ứng Dụng Desktop Native 100% (Hoàn Toàn Không Dùng Trình Duyệt / Localhost)
 
-            ### 🛠️ Các cải tiến & Vá lỗi quan trọng:
-            * **🔥 Khắc phục triệt để lỗi `127.0.0.1 refused to connect` (`ERR_CONNECTION_REFUSED`)**:
-              * **Nguyên nhân**: Do tính năng Startup Boost của Microsoft Edge, tiến trình launcher chuyển tiếp sang background service của Windows và báo kết thúc tiến trình sau 0.05s. Đoán nhầm người dùng tắt cửa sổ nên AeroVM tự đóng server trước khi trình duyệt kịp kết nối.
-              * **Giải pháp**: Loại bỏ cơ chế wait tiến trình trình duyệt, chuyển sang quản lý vòng đời ứng dụng độc lập với hồ sơ riêng biệt `--user-data-dir` và cơ chế heartbeat `navigator.sendBeacon`. Server luôn duy trì ổn định 100%, mở app là vào ngay giao diện.
-            * **🎨 Chuyển giao diện sang CSS độc lập (`style.css` & `app.js`)**:
-              * Tách toàn bộ mã giao diện thành file CSS riêng biệt (`style.css`) và Javascript (`app.js`).
-              * Áp dụng hệ thống thiết kế Dark Glassmorphism chuẩn phong cách UTM Studio macOS: mờ Acrylic, tab điều hướng mượt mà, công tắc iOS toggle, phản hồi tức thì.
-            * **⚙️ Chuyển đổi và chỉnh sửa cài đặt máy ảo linh hoạt**:
-              * Bảng điều khiển cài đặt toàn diện: Chuyển đổi Engine (WHPX ⚡ / TCG 🔄), nhân CPU, RAM (256MB - 16GB), bo mạch, card đồ họa VGA, âm thanh và file ISO.
-            * **🐢 Chế độ máy cấu hình yếu (Low-Spec Mode)**:
-              * Giảm tải tài nguyên tối đa cho các máy tính cấu hình yếu, tránh treo đơ hoặc dừng máy ảo giữa chừng.
-            * **📦 Trình cài đặt tự động (`install.bat`)**:
-              * Cài đặt vào thư mục riêng `%LOCALAPPDATA%\Programs\AeroVM`, tạo Shortcut Desktop mở trực tiếp 0 cửa sổ console cmd.
+            ### 🌟 Các cải tiến & tính năng đột phá:
+            * **🖥️ Chuyển đổi 100% sang Giao diện Native Win32/DirectX Desktop**:
+              * Loại bỏ hoàn toàn máy chủ nội bộ localhost (`127.0.0.1:45678`) và cửa sổ trình duyệt Edge/Chrome.
+              * Ứng dụng chạy trực tiếp thành cửa sổ Windows Native độc lập chuẩn UTM, khung viền Windows chuẩn (không dùng 3 nút chấm tròn macOS).
+              * Hỗ trợ chuẩn tiếng Việt Segoe UI sắc nét, mượt mà trên nền tảng eframe / egui và Hardware Acceleration.
+            * **❌ Nút "Thoát" chuyên biệt trong Cài đặt Máy ảo**:
+              * Thêm nút `❌ Thoát` góc trên và `❌ Thoát (Không lưu)` dưới cùng màn hình Cài đặt, cho phép đóng bảng cài đặt và quay lại màn hình chính bất cứ lúc nào.
+            * **💾 Lưu & Cập nhật Cài đặt tức thì**:
+              * Sửa lỗi lưu cấu hình máy ảo (`config.json`), lưu các thông số nhân CPU, RAM, card đồ họa, chipset và file ISO chuẩn xác.
+            * **⚡ Tối ưu WHPX & TCG chống lỗi thoát VP exit code 4**:
+              * Thiết lập `kernel-irqchip=off` cho WHPX giúp chạy ổn định trên các CPU đời cũ không bị ngắt quãng giữa chừng.
+              * Chế độ máy yếu (Low-spec mode) và TCG cho phép chạy mượt mà ngay cả trên máy cấu hình khiêm tốn.
 
-            ### 📦 Gói cài đặt phát hành:
-            * **`AeroVM-Windows-x64-v0.1.4.zip`**: Bao gồm `install.bat`, `uninstall.bat`, `aerovm.exe`, `run.bat` và hướng dẫn.
-          files: AeroVM-Windows-x64-v0.1.4.zip
+            ### 📦 Gói cài đặt:
+            * **`AeroVM-Windows-x64-v0.1.5.zip`**: Giải nén và chạy `install.bat` để tạo shortcut Desktop và sử dụng ngay lập tức!
+          files: AeroVM-Windows-x64-v0.1.5.zip
