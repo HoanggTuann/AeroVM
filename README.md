@@ -1,6 +1,18 @@
 # 🚀 AeroVM (Phong cách UTM cho Windows - 100% Native Desktop)
 
-> **Trình quản lý máy ảo hiện đại, siêu nhẹ, viết 100% bằng Rust với giao diện Native Desktop phong cách UTM.**
+> **Trình quản lý máy ảo hiện đại, siêu nhẹ, viết 100% bằng Rust với giao diện Native Desktop Win32/DirectX.**
+
+[![Tải Bản Mới Nhất v0.1.5](https://img.shields.io/badge/Download-AeroVM%20v0.1.5%20(Windows%20x64)-brightgreen?style=for-the-badge&logo=windows)](https://github.com/HoanggTuann/AeroVM/releases/download/v0.1.5/AeroVM-Windows-x64-v0.1.5.zip)
+[![GitHub Release](https://img.shields.io/github/v/release/HoanggTuann/AeroVM?style=for-the-badge&color=blue)](https://github.com/HoanggTuann/AeroVM/releases/latest)
+
+---
+
+### 📥 [BẤM VÀO ĐÂY ĐỂ TẢI BẢN MỚI NHẤT v0.1.5 (`AeroVM-Windows-x64-v0.1.5.zip`)](https://github.com/HoanggTuann/AeroVM/releases/download/v0.1.5/AeroVM-Windows-x64-v0.1.5.zip)
+* **Giao diện Native Win32/DirectX 100%**: Hoàn toàn không mở Edge, Chrome hay web server `127.0.0.1:45678`.
+* **Khung viền Windows chuẩn**: Loại bỏ 3 nút chấm tròn macOS, sử dụng nút điều khiển chuẩn Windows.
+* **Cài đặt máy ảo có nút Thoát**: Có nút `❌ Thoát` và `❌ Thoát (Không lưu)` tiện lợi.
+* **Lưu cài đặt tức thì**: Lưu chính xác các thông số CPU, RAM, ổ đĩa, card VGA, bo mạch và file ISO.
+* **Tối ưu hóa máy yếu & WHPX**: Chống crash `WHPX: Unexpected VP exit code 4`, hỗ trợ TCG mượt mà cho SliTaz và Linux nhẹ.
 
 ---
 
